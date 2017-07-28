@@ -5,7 +5,15 @@ import './App.css'
 const DataTable = ({users}) => {
   if (!users) return null
   const output = users.map((user) => {
-    return (<tr><td key={user.id}>{user.FirstName}</td><td>{user.LastName}</td><td>{user.Address}</td><td>{user.City}</td></tr>)
+    const imgSrc = `data:image/jpeg;base64,${user.Avatar}`
+    return (
+      <tr>
+        <td key={user.id}>{user.FirstName}</td>
+        <td>{user.LastName}</td>
+        <td>{user.Address}</td>
+        <td>{user.City}</td>
+        <td><img alt="Embedded Image" src={imgSrc} className='App-avatar'></img></td>
+      </tr>)
   })
   return (
     <tbody>
@@ -49,6 +57,7 @@ class App extends Component {
                   <th>Last name</th>
                   <th>address</th>
                   <th>city</th>
+                  <th>avatar</th>
                 </thead>
                 <DataTable users={this.state.data}/>
               </Table>
