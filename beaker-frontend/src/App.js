@@ -3,7 +3,7 @@ import { Col, Jumbotron, Grid, Row, Table } from 'react-bootstrap'
 import './App.css'
 
 const DataTable = ({users}) => {
-  if (!users) return null
+  if (!users) return (<h2>Loading...</h2>)
   const output = users.map((user) => {
     const imgSrc = `data:image/jpeg;base64,${user.Avatar}`
     return (
@@ -16,9 +16,18 @@ const DataTable = ({users}) => {
       </tr>)
   })
   return (
-    <tbody>
-      {output}
-    </tbody>
+    <Table>
+      <thead>
+        <th>First name</th>
+        <th>Last name</th>
+        <th>address</th>
+        <th>city</th>
+        <th>avatar</th>
+      </thead>
+      <tbody>
+        {output}
+      </tbody>
+    </Table>
   )
 }
 
@@ -51,16 +60,7 @@ class App extends Component {
                 <h1>User Manager</h1>
                 <p>Here are our great users</p>
               </Jumbotron>
-              <Table>
-                <thead>
-                  <th>First name</th>
-                  <th>Last name</th>
-                  <th>address</th>
-                  <th>city</th>
-                  <th>avatar</th>
-                </thead>
-                <DataTable users={this.state.data}/>
-              </Table>
+              <DataTable users={this.state.data}/>
             </Col>
           </Row>
         </Grid>
