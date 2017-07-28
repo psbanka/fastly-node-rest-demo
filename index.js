@@ -15,19 +15,19 @@ connection.connect((err) => {
   console.log('Connected to mysql')
 })
 
-app.get('/users', (req, res) => {
+app.get('/api/users', (req, res) => {
   connection.query('select * from Persons', (err, response) => {
     if (err) throw err
-    res.send({ output: response })
+    res.send({ data: response })
   })
 })
 
-app.post('/endpoint', (req, res) => {
+app.post('/api/endpoint', (req, res) => {
   console.log(req.body) // all your JSON gets spit out
   res.send({ answer: 'acknowledged' })
 })
 
-const port = process.env.NODE_PORT || 3000
+const port = process.env.NODE_PORT || 3333
 const server = app.listen(port, () => console.log(`server listening on port ${port}`))
 
 function cleanup () {
