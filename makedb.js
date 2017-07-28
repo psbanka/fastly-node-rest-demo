@@ -4,7 +4,7 @@ const mysql = require('mysql')
 
 const createTable = (connection) => {
   let query = 'DROP TABLE Persons'
-  return Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     connection.query(query, () => {
       query = `
         CREATE TABLE Persons (
@@ -30,17 +30,14 @@ const createRecord = (connection) => {
     jig.generateImage(100, 100, 80, (err, image) => {
       if (err) reject(err)
 
-      // const imageSlug = image.data.toString('base64')
+      const imageSlug = image.data.toString('base64')
       const lname = faker.name.lastName()
       const query = `
-        INSERT INTO Persons (LastName, FirstName, Address, City) VALUES
-          ("${lname}", "${faker.name.firstName()}", "${faker.address.streetAddress()}", "${faker.address.city()}")
+      INSERT INTO Persons (LastName, FirstName, Address, City, Avatar) VALUES
+        ("${faker.name.lastName()}", "${faker.name.firstName()}", "${faker.address.streetAddress()}", "${faker.address.city()}", "${imageSlug}")
       `
-      // INSERT INTO Persons (LastName, FirstName, Address, City, Avatar) VALUES
-      // ("${faker.name.lastName()}", "${faker.name.firstName()}", "${faker.address.streetAddress()}", "${faker.address.city()}", "${imageSlug}")
       connection.query(query, (err2, results) => {
         if (err2) reject(err)
-        // console.log(results)
         console.log('done', lname)
         resolve()
       })
