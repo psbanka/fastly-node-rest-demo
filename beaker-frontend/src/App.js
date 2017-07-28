@@ -7,7 +7,7 @@ import ErrorAlert from './ErrorAlert'
 
 import './App.css'
 
-/* globals fetch */
+/* globals fetch Headers */
 
 class App extends Component {
   constructor () {
@@ -32,9 +32,28 @@ class App extends Component {
     this.setState({errorMessages: newErrors})
   }
 
-  changeUser (user) {
-    console.log(user)
-    fetch(`/api/user/${user.ID}`, {method: 'POST', body: user})
+  modifySelectedUserRecord (user) {
+    const newData = this.state.data.map((i) => Object.assign({}, i))
+    newData[this.state.userId] = user
+    this.setState({data: newData})
+  }
+
+  changeUser (user, field, newValue) {
+    user[field] = newValue
+    this.modifySelectedUserRecord(user)
+
+    const myHeaders = new Headers()
+    myHeaders.append('Content-Type', 'application/json')
+
+    const myInit = {
+      method: 'POST',
+      body: JSON.stringify(user),
+      headers: myHeaders,
+      mode: 'cors',
+      cache: 'default'
+    }
+
+    fetch(`/api/user/${user.ID}`, myInit)
       .then((output) => output.json())
       .then((output) => {
         const newData = this.state.data.map((i) => Object.assign({}, i))

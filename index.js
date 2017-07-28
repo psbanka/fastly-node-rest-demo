@@ -22,9 +22,28 @@ app.get('/api/users', (req, res) => {
   })
 })
 
-app.post('/api/endpoint', (req, res) => {
-  console.log(req.body) // all your JSON gets spit out
-  res.send({ answer: 'acknowledged' })
+app.get('/api/user/:userId', (req, res) => {
+  connection.query(`select * from Persons where ID=${req.body.ID}`, (err, response) => {
+    if (err) throw err
+    res.send({ data: response })
+  })
+})
+
+app.post('/api/user/:userId', (req, res) => {
+  // TODO: Validate req.body
+  const fields = Object.keys(req.body).map((key) => {
+    if (key === 'ID') return
+    return `${key} = "${req.body[key]}"`
+  }).filter(Boolean)
+  const query = `update Persons set ${fields.join(', ')} where ID=${req.body.ID}`
+
+  connection.query(query, (err, response) => {
+    if (err) throw err
+    connection.query(`select * from Persons where ID=${req.body.ID}`, (err, response) => {
+      if (err) throw err
+      res.send({ data: response })
+    })
+  })
 })
 
 const port = process.env.NODE_PORT || 3333
