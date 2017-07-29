@@ -30,7 +30,7 @@ const createRecord = (connection) => {
     jig.generateImage(100, 100, 80, (err, image) => {
       if (err) reject(err)
 
-      const imageSlug = image.data.toString('base64')
+      const imageSlug = 'data:image/jpeg;base64,' + image.data.toString('base64')
       const lname = faker.name.lastName()
       const query = `
       INSERT INTO Persons (LastName, FirstName, Address, City, Avatar) VALUES

@@ -5,14 +5,13 @@ export default ({users, onClick}) => {
   if (!users) return (<h2>Loading...</h2>)
 
   const output = users.map((user) => {
-    const imgSrc = `data:image/jpeg;base64,${user.Avatar}`
     return (
-      <tr onClick={() => onClick(user.ID)}>
+      <tr onClick={() => onClick(user.ID - 1)}>
         <td key={user.ID}>{user.FirstName}</td>
         <td>{user.LastName}</td>
         <td>{user.Address}</td>
         <td>{user.City}</td>
-        <td><img alt="Embedded Image" src={imgSrc} className='App-avatar'></img></td>
+        <td><img alt="Embedded Image" src={user.Avatar} className='App-avatar'></img></td>
       </tr>
     )
   })

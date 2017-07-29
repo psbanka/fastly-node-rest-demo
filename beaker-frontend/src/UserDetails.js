@@ -1,11 +1,11 @@
 import React from 'react'
 import { FormGroup, FormControl, ControlLabel, HelpBlock, Panel } from 'react-bootstrap'
+import ImageUploader from './ImageUploader'
 
 export default ({users, userId, onChange}) => {
-  if (!userId) return (<h1>Details!</h1>)
+  if (userId === null) return (<h1>Details!</h1>)
 
   const user = users[userId]
-  const imgSrc = `data:image/jpeg;base64,${user.Avatar}`
   return (
     <form>
       <FormGroup>
@@ -37,10 +37,7 @@ export default ({users, userId, onChange}) => {
           placeholder="Enter text"
           onChange={(e) => onChange(user, 'City', e.target.value)}
         />
-        <ControlLabel>Avatar</ControlLabel>
-        <Panel>
-          <img alt="Embedded Image" src={imgSrc} className='App-avatar'></img>
-        </Panel>
+        <ImageUploader avatar={user.Avatar} onChange={(data) => onChange(user, 'Avatar', data)} />
         <FormControl.Feedback />
         <HelpBlock>Changes are saved immediately to the server.</HelpBlock>
       </FormGroup>

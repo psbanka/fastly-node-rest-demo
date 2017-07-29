@@ -57,7 +57,7 @@ class App extends Component {
       .then((output) => output.json())
       .then((output) => {
         const newData = this.state.data.map((i) => Object.assign({}, i))
-        newData[user.ID] = output.data
+        newData[user.ID - 1] = output.data[0]
         this.setState({data: newData})
       })
       .catch(error => {
