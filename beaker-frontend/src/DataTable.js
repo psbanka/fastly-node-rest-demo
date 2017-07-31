@@ -9,6 +9,7 @@ export default ({users, onClick}) => {
       <tr onClick={() => onClick(user.ID - 1)}>
         <td key={user.ID}>{user.FirstName}</td>
         <td>{user.LastName}</td>
+        <td>{user.Email}</td>
         <td>{user.Address}</td>
         <td>{user.City}</td>
         <td><img alt="Embedded Image" src={user.Avatar} className='App-avatar'></img></td>
@@ -19,11 +20,14 @@ export default ({users, onClick}) => {
   return (
     <Table>
       <thead>
-        <th>First name</th>
-        <th>Last name</th>
-        <th>address</th>
-        <th>city</th>
-        <th>avatar</th>
+        <tr>
+          <th>First name</th>
+          <th>Last name</th>
+          <th>email</th>
+          <th>address</th>
+          <th>city</th>
+          <th>avatar</th>
+        </tr>
       </thead>
       <tbody>
         {output}

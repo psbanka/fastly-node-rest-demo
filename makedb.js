@@ -1,18 +1,26 @@
 const faker = require('faker')
-const jig = require('js-image-generator')
+const avatar = require('avatar-generator')()
 const mysql = require('mysql')
+
+const DATA_MAP = [
+  {field: 'Email', size: 255, generator: faker.internet.email},
+  {field: 'LastName', size: 255, generator: faker.name.lastName},
+  {field: 'FirstName', size: 255, generator: faker.name.firstName},
+  {field: 'Address', size: 255, generator: faker.address.streetAddress},
+  {field: 'City', size: 255, generator: faker.address.city}
+]
 
 const createTable = (connection) => {
   let query = 'DROP TABLE Persons'
+  const fields = DATA_MAP.map(({field, size}) => `${field} varchar(${size})`).join(', ')
+  console.log(fields)
+
   return new Promise((resolve, reject) => {
     connection.query(query, () => {
       query = `
         CREATE TABLE Persons (
           ID int NOT NULL AUTO_INCREMENT,
-          LastName varchar(255),
-          FirstName varchar(255),
-          Address varchar(255),
-          City varchar(255),
+          ${fields},
           Avatar TEXT(100000),
           PRIMARY KEY (ID)
         );
@@ -27,14 +35,17 @@ const createTable = (connection) => {
 
 const createRecord = (connection) => {
   return new Promise((resolve, reject) => {
-    jig.generateImage(100, 100, 80, (err, image) => {
+    const email = faker.internet.email()
+    const gender = Math.random() < 0.5 ? 'male' : 'female'
+    avatar(email, gender, 400).toBuffer(function (err, buffer){
       if (err) reject(err)
-
-      const imageSlug = 'data:image/jpeg;base64,' + image.data.toString('base64')
+      const imageSlug = 'data:image/png;base64,' + buffer.toString('base64')
       const lname = faker.name.lastName()
+      const mainValues = DATA_MAP.map(({generator}) => `"${generator()}"`).join(', ')
+      const fieldNames = DATA_MAP.map(({field}) => field).join(', ')
       const query = `
-      INSERT INTO Persons (LastName, FirstName, Address, City, Avatar) VALUES
-        ("${faker.name.lastName()}", "${faker.name.firstName()}", "${faker.address.streetAddress()}", "${faker.address.city()}", "${imageSlug}")
+      INSERT INTO Persons (${fieldNames}, Avatar) VALUES
+        (${mainValues}, "${imageSlug}")
       `
       connection.query(query, (err2, results) => {
         if (err2) reject(err)

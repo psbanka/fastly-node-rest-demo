@@ -10,11 +10,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "avatar-generator": "^1.0.8",
     "body-parser": "^1.17.2",
     "eslint": "^4.3.0",
     "express": "^4.15.3",
     "faker": "^4.1.0",
-    "js-image-generator": "^1.0.2",
     "mysql": "^2.14.0"
   },
   "devDependencies": {

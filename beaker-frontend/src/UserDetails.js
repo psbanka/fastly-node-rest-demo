@@ -23,6 +23,13 @@ export default ({users, userId, onChange}) => {
           placeholder="Enter text"
           onChange={(e) => onChange(user, 'LastName', e.target.value)}
         />
+        <ControlLabel>Email</ControlLabel>
+        <FormControl
+          type="text"
+          value={user.Email}
+          placeholder="Enter text"
+          onChange={(e) => onChange(user, 'Email', e.target.value)}
+        />
         <ControlLabel>Address</ControlLabel>
         <FormControl
           type="text"
