@@ -2,6 +2,7 @@ const express = require('express')
 const app = express()
 const mysql = require('mysql')
 app.use(require('body-parser').json())
+app.use(express.static('public'))
 
 const connection = mysql.createConnection({
   host: 'localhost',

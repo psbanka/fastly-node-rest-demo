@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "cd beaker-frontend;yarn build;cd -;mkdir -p;cp beaker-frontend/build/* public;forever start index.js"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +16,7 @@
     "eslint": "^4.3.0",
     "express": "^4.15.3",
     "faker": "^4.1.0",
+    "forever": "^0.15.3",
     "mysql": "^2.14.0"
   },
   "devDependencies": {
