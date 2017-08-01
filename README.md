@@ -6,7 +6,7 @@ By Peter Banka | August 1 2017 | Performance
 There was a [great series of articles](https://www.fastly.com/blog/api-caching-part-iii) by
 [Ryan Richards](https://www.fastly.com/blog/ryan-richards) on how to set up API caching on your
 RESTful web service. In this article, we hope to take you through the process of actually implementing
-this.
+this step by step on an example single-page web application.
 
 ## Overview
 
@@ -177,18 +177,19 @@ http {
 
 ### Run the node server process
  
-Next, we're going to set up our node server to deliver both front-end and backend
-content. We will also be setting up the node server to deliver an API and to serve the
-built javascript content of our website. In our project, we have put the
-frontend code in the `beaker-frontend` directory and the backend is served by
-node using the express platform. To get the basic system installed and running
-on your system, run the following:
+Next, we're going to set up our node server to deliver both front-end and
+backend content. In our project, we have put the frontend code in the
+`beaker-frontend` directory and the backend is served by node using the express
+platform by running the `index.js` file. To get the basic system installed and
+running on your system, run the following:
 
 `npm run setup`
 
 `npm start`
 
-TALK ABOUT HOW THE APP WORKS< TAKE SOME SCREEN-CAPS
+### Test it with your browser
+
+https://cl.ly/2G3H1i2h1p36
 
 ## Putting things behind Fastly
 
