@@ -1,3 +1,4 @@
+require('dotenv').config()
 const faker = require('faker')
 const avatar = require('avatar-generator')()
 const mysql = require('mysql')
@@ -13,7 +14,6 @@ const DATA_MAP = [
 const createTable = (connection) => {
   let query = 'DROP TABLE Persons'
   const fields = DATA_MAP.map(({field, size}) => `${field} varchar(${size})`).join(', ')
-  console.log(fields)
 
   return new Promise((resolve, reject) => {
     connection.query(query, () => {
@@ -57,10 +57,10 @@ const createRecord = (connection) => {
 }
 
 const connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'beaker',
-  password: 'beakerpass',
-  database: 'beaker'
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME
 })
 
 connection.connect((err) => {

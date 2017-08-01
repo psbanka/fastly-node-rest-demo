@@ -1,18 +1,24 @@
 {
   "name": "beaker",
   "version": "1.0.0",
-  "description": "",
+  "description": "A reference-implementation of programatically using the Fastly API to cache server content",
   "main": "index.js",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/psbanka/fastly-node-rest-demo.git"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "cd beaker-frontend;yarn build;cd -;mkdir -p;cp beaker-frontend/build/* public;forever start index.js"
+    "start": "cd beaker-frontend;yarn build;cd -;mkdir -p;cp beaker-frontend/build/* public;forever start index.js",
+    "setup": "npm install;cd beaker-frontend;npm install;cd -"
   },
   "keywords": [],
-  "author": "",
+  "author": "peba@fastly.com",
   "license": "ISC",
   "dependencies": {
     "avatar-generator": "^1.0.8",
     "body-parser": "^1.17.2",
+    "dotenv": "^4.0.0",
     "eslint": "^4.3.0",
     "express": "^4.15.3",
     "faker": "^4.1.0",
