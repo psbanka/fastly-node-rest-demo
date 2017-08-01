@@ -14,7 +14,7 @@ export default ({users, userId, onChange}) => {
           type="text"
           value={user.FirstName}
           placeholder="Enter text"
-          onChange={(e) => onChange(user, 'firstName', e.target.value)}
+          onChange={(e) => onChange(user, 'FirstName', e.target.value)}
         />
         <ControlLabel>Last name</ControlLabel>
         <FormControl

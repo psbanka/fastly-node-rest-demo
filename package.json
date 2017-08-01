@@ -9,10 +9,10 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "cd beaker-frontend;npm run build;cd -;mkdir -p public;cp -a beaker-frontend/build/* public",
-    "start": "npm run build;forever start index.js",
+    "build": "cd beaker-frontend;yarn run build;cd -;mkdir -p public;cp -a beaker-frontend/build/* public",
+    "start": "yarn run build;forever start index.js",
     "stop": "forever stopall",
-    "setup": "npm install;cd beaker-frontend;npm install;cd -"
+    "setup": "yarn;cd beaker-frontend;yarn;cd -"
   },
   "keywords": [],
   "author": "peba@fastly.com",
@@ -25,7 +25,8 @@
     "express": "^4.15.3",
     "faker": "^4.1.0",
     "forever": "^0.15.3",
-    "mysql": "^2.14.0"
+    "mysql": "^2.14.0",
+    "validator": "^8.0.0"
   },
   "devDependencies": {
     "eslint-config-standard": "^10.2.1",
