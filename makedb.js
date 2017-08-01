@@ -68,9 +68,12 @@ connection.connect((err) => {
   console.log('Connected to mysql')
 })
 
+const recordCount = parseInt(process.argv[2] || 20)
+console.log(`Creating ${recordCount} records...`)
+
 createTable(connection)
   .then(() => {
-    Promise.all(Array(20).fill().map(() => createRecord(connection)))
+    Promise.all(Array(recordCount).fill().map(() => createRecord(connection)))
       .then(() => {
         connection.end()
         console.log('done')

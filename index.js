@@ -1,4 +1,5 @@
 require('dotenv').config()
+const request = require('superagent')
 const express = require('express')
 const app = express()
 const mysql = require('mysql')
@@ -7,17 +8,47 @@ const validator = require('validator')
 app.use(require('body-parser').json({limit: '10mb'}))
 app.use(express.static('public'))
 
-function addrValidator (str) {
+////////////////////////////////////////////////////////////////////////
+//                         Utility functions                          //
+////////////////////////////////////////////////////////////////////////
+
+const addrValidator = (str) => {
   return validator.matches(str, '^[0-9]+ .+$')
 }
 
-function avatarValidator (str) {
+const avatarValidator = (str) => {
   return validator.matches(str, 'data:image\/([a-zA-Z]*);base64,([^\"]*)')
 }
 
-function cityValidator (str) {
+const cityValidator = (str) => {
   return validator.matches(str, '[a-z|A-Z| ]+')
 }
+
+const purgeCache = () => {
+  if (!process.env.FASTLY_KEY || !process.env.SERVICE_ID) {
+    console.log('not configured to clear cache.')
+    return
+  }
+  const url = `${FASTLY_URL}/service/${process.env.SERVICE_ID}/purge_all`
+  request
+    .post(url)
+    .set('Fastly-Key', process.env.FASTLY_KEY)
+    .set('Accept', 'application/json')
+    .end(function(err, res){
+      if (err) console.error('error from fastly:', err)
+      if (res.statusCode === 200) {
+        console.log('cache cleared')
+      } else {
+        console.log('error clearing cache: ', res.statusCode)
+      }
+    })
+}
+
+////////////////////////////////////////////////////////////////////////
+//                             Constants                              //
+////////////////////////////////////////////////////////////////////////
+
+const FASTLY_URL = 'https://api.fastly.com'
 
 const DATA_MAP = {
   'Email': validator.isEmail,
@@ -28,17 +59,9 @@ const DATA_MAP = {
   'Avatar': avatarValidator
 }
 
-const connection = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME
-})
-
-connection.connect((err) => {
-  if (err) throw err
-  console.log('Connected to mysql')
-})
+////////////////////////////////////////////////////////////////////////
+//                           Express routes                           //
+////////////////////////////////////////////////////////////////////////
 
 /**
  * Get all users
@@ -46,6 +69,8 @@ connection.connect((err) => {
 app.get('/api/users', (req, res) => {
   connection.query('select * from Persons', (err, response) => {
     if (err) throw err
+    res.setHeader('Cache-Control', 'no-cache') // user-agent does not cache
+    res.setHeader('Surrogate-Control', 'max-age=86400') // Tell Fastly to cache this for a day
     res.send({ data: response })
   })
 })
@@ -56,6 +81,8 @@ app.get('/api/users', (req, res) => {
 app.get('/api/user/:userId', (req, res) => {
   connection.query(`select * from Persons where ID=${req.body.ID}`, (err, response) => {
     if (err) throw err
+    res.setHeader('Cache-Control', 'no-cache') // user-agent does not cache
+    res.setHeader('Surrogate-Control', 'no-cache') // Tell Fastly NOT to cache individual user requests
     res.send({ data: response })
   })
 })
@@ -77,13 +104,34 @@ app.post('/api/user/:userId', (req, res) => {
   }).filter(Boolean)
   const query = `update Persons set ${fields.join(', ')} where ID=${req.body.ID}`
 
+  console.log('updating database...')
   connection.query(query, (err, response) => {
     if (err) throw err
+    purgeCache()
+    console.log('returning updated data...');
     connection.query(`select * from Persons where ID=${req.body.ID}`, (err, response) => {
       if (err) throw err
+      res.setHeader('Cache-Control', 'no-cache')
+      res.setHeader('Surrogate-Control', 'no-cache')
       res.send({ data: response })
     })
   })
+})
+
+////////////////////////////////////////////////////////////////////////
+//                           Server startup                           //
+////////////////////////////////////////////////////////////////////////
+
+const connection = mysql.createConnection({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME
+})
+
+connection.connect((err) => {
+  if (err) throw err
+  console.log('Connected to mysql')
 })
 
 const port = process.env.NODE_PORT || 3333
