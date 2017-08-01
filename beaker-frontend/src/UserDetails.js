@@ -1,5 +1,5 @@
 import React from 'react'
-import { FormGroup, FormControl, ControlLabel, HelpBlock, Panel } from 'react-bootstrap'
+import { FormGroup, FormControl, ControlLabel, HelpBlock } from 'react-bootstrap'
 import ImageUploader from './ImageUploader'
 
 export default ({users, userId, onChange}) => {

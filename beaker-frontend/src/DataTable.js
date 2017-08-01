@@ -12,7 +12,7 @@ export default ({users, onClick}) => {
         <td>{user.Email}</td>
         <td>{user.Address}</td>
         <td>{user.City}</td>
-        <td><img alt="Embedded Image" src={user.Avatar} className='App-avatar'></img></td>
+        <td><img alt="User Avatar" src={user.Avatar} className='App-avatar'></img></td>
       </tr>
     )
   })

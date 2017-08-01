@@ -17,7 +17,7 @@ export default ({avatar, onChange}) => {
       <ControlLabel>Avatar</ControlLabel>
       <Panel>
         <Dropzone onDrop={onDrop} style={{display: 'flex', flexDirection: 'column'}}>
-          <img alt="Embedded Image" src={avatar} style={{width: '100px', height: '100px'}}></img>
+          <img alt="User Avatar" src={avatar} style={{width: '100px', height: '100px'}}></img>
           <p>Try dropping a new image here or click to select a file to upload.</p>
         </Dropzone>
       </Panel>
