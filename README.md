@@ -206,7 +206,7 @@ installed and running on your system, run the following:
 
 You're ready to test! Point your browser at the IP address of your server. You should see something like the following:
 
-![Running system](https://cl.ly/2G3H1i2h1p36)
+![Running system](https://s3.amazonaws.com/f.cl.ly/items/3g2c0X0W0x35403r0i2w/Screen%20Recording%202017-08-01%20at%2007.16%20AM.gif?AWSAccessKeyId=AKIAJEFUZRCWSLB2QA5Q&Expires=1501636303&Signature=B7%2F9OtrntK%2BDtZJSVHoPjlRu5iI%3D)
 
 # Putting your service behind Fastly
 
@@ -218,7 +218,7 @@ Go to [Fastly](https://manage.fastly.com/authentication/sign-in) and sign up for
 
 Finally, you'll need to to go to your DNS provider and create a CNAME record for your www service and point it to Fastly's non-ssl service, as shown here:
 
-![Setting up CNAME](https://cl.ly/2v1o0p0U0z2W)
+![Setting up CNAME](https://s3.amazonaws.com/f.cl.ly/items/3F1v312C1l0m0F072P1w/Image%202017-08-01%20at%203.54.01%20PM.public.2v1o0p0U0z2W.png)
 
 ## Test it with and without Fastly
 Once all this is set up and the DNS records have converged, you can compare and contrast your new web application with and without the Fastly service. If you go directly to the IP address of your server as you did in the previous step, you'll see how the application performs without the CDN cache in front of it (in my case, http://138.68.63.121). If you point your browser to the www name for your domain, you can see how it performs with Fastly in front of it (e.g. http://www.cheezygoodness.com).
@@ -235,15 +235,15 @@ The final step of this article will be to make the server a more active particip
 
 The service-id of your service can be found under the tile of your service in the Fastly dashboard:
 
-![Show Service ID](https://cl.ly/3u0o1X3M2339)
+![Show Service ID](https://s3.amazonaws.com/f.cl.ly/items/0Z1m2K0e1K2b1l1G1R2S/Image%202017-08-01%20at%204.19.20%20PM.public.3u0o1X3M2339.png?AWSAccessKeyId=AKIAJEFUZRCWSLB2QA5Q&Expires=1501636152&Signature=Cx3eT5thYDiGiO3%2Fl%2FeR%2F17TB28%3D)
 
 ## Fastly API token
 
 Generate a Fastly API token by going to the accounts page
-![Accounts Page](https://cl.ly/0t082b2q1W3m)
+![Accounts Page](https://s3.amazonaws.com/f.cl.ly/items/2l1w0L2p0E3g1u263k1e/Image%202017-08-01%20at%204.30.04%20PM.public.0L2L0c2p2o1y.png?AWSAccessKeyId=AKIAJEFUZRCWSLB2QA5Q&Expires=1501636212&Signature=aEJ7Kp20foxiid1priT8WRM%2BOio%3D)
 
 And then click on Create token:
-![Create Token](https://cl.ly/0L2L0c2p2o1y)
+![Create Token](https://s3.amazonaws.com/f.cl.ly/items/1A3G0l172y0s3D1j0v3Q/Image%202017-08-01%20at%204.33.09%20PM.public.1m1G1Y0K1I3E.png?AWSAccessKeyId=AKIAJEFUZRCWSLB2QA5Q&Expires=1501636245&Signature=jjr2j7eLDWECWkeQzPvtYCyXPqU%3D)
 
 Choose a specific service and select "Purge full cache" and "Purge select content" for properties of the token. When you finish creating the token, copy the token key and put it into the `.env` file (in addition to your service ID), as follows:
 
