@@ -1,52 +1,54 @@
 import React from 'react'
-import { FormGroup, FormControl, ControlLabel, HelpBlock } from 'react-bootstrap'
+import { FormGroup, FormControl, ControlLabel, Button, ButtonToolbar } from 'react-bootstrap'
 import ImageUploader from './ImageUploader'
 
-export default ({users, userId, onChange}) => {
-  if (userId === null) return (<h1>Details!</h1>)
+export default ({editUser, onChange, onSave, onCancel}) => {
+  if (editUser === null) return (<h3>Click row to edit</h3>)
 
-  const user = users[userId]
   return (
     <form>
       <FormGroup>
         <ControlLabel>First name</ControlLabel>
         <FormControl
           type="text"
-          value={user.FirstName}
+          value={editUser.FirstName}
           placeholder="Enter text"
-          onChange={(e) => onChange(user, 'FirstName', e.target.value)}
+          onChange={(e) => onChange('FirstName', e.target.value)}
         />
         <ControlLabel>Last name</ControlLabel>
         <FormControl
           type="text"
-          value={user.LastName}
+          value={editUser.LastName}
           placeholder="Enter text"
-          onChange={(e) => onChange(user, 'LastName', e.target.value)}
+          onChange={(e) => onChange('LastName', e.target.value)}
         />
         <ControlLabel>Email</ControlLabel>
         <FormControl
           type="text"
-          value={user.Email}
+          value={editUser.Email}
           placeholder="Enter text"
-          onChange={(e) => onChange(user, 'Email', e.target.value)}
+          onChange={(e) => onChange('Email', e.target.value)}
         />
         <ControlLabel>Address</ControlLabel>
         <FormControl
           type="text"
-          value={user.Address}
+          value={editUser.Address}
           placeholder="Enter text"
-          onChange={(e) => onChange(user, 'Address', e.target.value)}
+          onChange={(e) => onChange('Address', e.target.value)}
         />
         <ControlLabel>City</ControlLabel>
         <FormControl
           type="text"
-          value={user.City}
+          value={editUser.City}
           placeholder="Enter text"
-          onChange={(e) => onChange(user, 'City', e.target.value)}
+          onChange={(e) => onChange('City', e.target.value)}
         />
-        <ImageUploader avatar={user.Avatar} onChange={(data) => onChange(user, 'Avatar', data)} />
+        <ImageUploader avatar={editUser.Avatar} onChange={(data) => onChange('Avatar', data)} />
         <FormControl.Feedback />
-        <HelpBlock>Changes are saved immediately to the server.</HelpBlock>
+        <ButtonToolbar>
+          <Button bsSize="large" bsStyle="primary" onClick={onSave}>Save</Button>
+          <Button bsSize="large" onClick={onCancel}>Cancel</Button>
+        </ButtonToolbar>
       </FormGroup>
     </form>
   )
