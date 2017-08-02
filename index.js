@@ -8,6 +8,12 @@ const validator = require('validator')
 app.use(require('body-parser').json({limit: '10mb'}))
 app.use(express.static('public'))
 
+// Default all content-type to JSON
+app.use(function (req, res, next) {
+  res.contentType('application/json')
+  next()
+})
+
 ////////////////////////////////////////////////////////////////////////
 //                         Utility functions                          //
 ////////////////////////////////////////////////////////////////////////
@@ -24,18 +30,22 @@ const cityValidator = (str) => {
   return validator.matches(str, '[a-z|A-Z| ]+')
 }
 
-const purgeCache = () => {
+const purgeCache = (keys) => {
   if (!process.env.FASTLY_KEY || !process.env.SERVICE_ID) {
     console.log('not configured to clear cache.')
     return
   }
-  const url = `${FASTLY_URL}/service/${process.env.SERVICE_ID}/purge_all`
+  const url = `${FASTLY_URL}/service/${process.env.SERVICE_ID}/purge`
   request
     .post(url)
+    .send({ surrogate_keys: keys })
     .set('Fastly-Key', process.env.FASTLY_KEY)
     .set('Accept', 'application/json')
-    .end(function (err, res){
-      if (err) console.error('error from fastly:', err)
+    .end(function (err, res) {
+      if (err) {
+        console.log('error from fastly:', err)
+        return
+      }
       if (res.statusCode === 200) {
         console.log('cache cleared')
       } else {
@@ -47,6 +57,8 @@ const purgeCache = () => {
 ////////////////////////////////////////////////////////////////////////
 //                             Constants                              //
 ////////////////////////////////////////////////////////////////////////
+
+const ALL_USERS = 'all-users'
 
 const FASTLY_URL = 'https://api.fastly.com'
 
@@ -69,6 +81,8 @@ const DATA_MAP = {
 app.get('/api/users', (req, res) => {
   connection.query('select * from Persons', (err, response) => {
     if (err) throw err
+    res.setHeader('Surrogate-Key', ALL_USERS)
+    res.setHeader('Cheezy', 'So Cheezy')
     res.setHeader('Cache-Control', 'no-cache') // user-agent does not cache
     res.setHeader('Surrogate-Control', 'max-age=86400') // Tell Fastly to cache this for a day
     res.send({ data: response })
@@ -107,7 +121,7 @@ app.put('/api/user/:userId', (req, res) => {
   console.log('updating database...')
   connection.query(query, (err, response) => {
     if (err) throw err
-    purgeCache()
+    purgeCache([ALL_USERS])
     console.log('returning updated data...')
     connection.query(`select * from Persons where ID=${req.body.ID}`, (err, response) => {
       if (err) throw err
@@ -150,6 +164,8 @@ function cleanup () {
     process.exit(1)
   }, 30 * 1000)
 }
+
+purgeCache([ALL_USERS])
 
 process.on('SIGINT', cleanup)
 process.on('SIGTERM', cleanup)
