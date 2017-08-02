@@ -34,7 +34,7 @@ const purgeCache = () => {
     .post(url)
     .set('Fastly-Key', process.env.FASTLY_KEY)
     .set('Accept', 'application/json')
-    .end(function(err, res){
+    .end(function (err, res){
       if (err) console.error('error from fastly:', err)
       if (res.statusCode === 200) {
         console.log('cache cleared')
@@ -90,7 +90,7 @@ app.get('/api/user/:userId', (req, res) => {
 /**
  * Replace the data for one user record with a new set of data
  */
-app.post('/api/user/:userId', (req, res) => {
+app.put('/api/user/:userId', (req, res) => {
   const fields = Object.keys(req.body).map((key) => {
     if (key === 'ID') return
     const validator = DATA_MAP[key]
@@ -108,7 +108,7 @@ app.post('/api/user/:userId', (req, res) => {
   connection.query(query, (err, response) => {
     if (err) throw err
     purgeCache()
-    console.log('returning updated data...');
+    console.log('returning updated data...')
     connection.query(`select * from Persons where ID=${req.body.ID}`, (err, response) => {
       if (err) throw err
       res.setHeader('Cache-Control', 'no-cache')
