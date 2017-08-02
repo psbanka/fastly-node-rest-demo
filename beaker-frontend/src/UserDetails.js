@@ -1,5 +1,5 @@
 import React from 'react'
-import { FormGroup, FormControl, ControlLabel, HelpBlock, Panel } from 'react-bootstrap'
+import { FormGroup, FormControl, ControlLabel, HelpBlock } from 'react-bootstrap'
 import ImageUploader from './ImageUploader'
 
 export default ({users, userId, onChange}) => {
@@ -14,7 +14,7 @@ export default ({users, userId, onChange}) => {
           type="text"
           value={user.FirstName}
           placeholder="Enter text"
-          onChange={(e) => onChange(user, 'firstName', e.target.value)}
+          onChange={(e) => onChange(user, 'FirstName', e.target.value)}
         />
         <ControlLabel>Last name</ControlLabel>
         <FormControl
@@ -22,6 +22,13 @@ export default ({users, userId, onChange}) => {
           value={user.LastName}
           placeholder="Enter text"
           onChange={(e) => onChange(user, 'LastName', e.target.value)}
+        />
+        <ControlLabel>Email</ControlLabel>
+        <FormControl
+          type="text"
+          value={user.Email}
+          placeholder="Enter text"
+          onChange={(e) => onChange(user, 'Email', e.target.value)}
         />
         <ControlLabel>Address</ControlLabel>
         <FormControl
