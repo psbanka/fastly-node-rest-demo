@@ -16,12 +16,14 @@ class App extends Component {
   constructor () {
     super(...arguments)
     this.state = {
+      pageNumber: 0,
       data: [],
       editUser: null,
       errorMessages: [],
       headers: {},
       loadTime: 0,
       saving: false,
+      totalPages: 0,
       userId: null
     }
     this.selectRow = this.selectRow.bind(this)
@@ -29,6 +31,7 @@ class App extends Component {
     this.saveEditUser = this.saveEditUser.bind(this)
     this.cancelEditUser = this.cancelEditUser.bind(this)
     this.clearErrors = this.clearErrors.bind(this)
+    this.changePage = this.changePage.bind(this)
   }
 
   selectRow (userId) {
@@ -36,9 +39,13 @@ class App extends Component {
     this.setState({userId, editUser})
   }
 
+  /////////////////////
+  //  Editing users  //
+  /////////////////////
+
   changeEditUser (field, newValue) {
     const newEditUser = Object.assign({}, this.state.editUser)
-    newEditUser[field] = newValue
+    newEditUser.attributes[field] = newValue
     this.setState({editUser: newEditUser})
   }
 
@@ -48,7 +55,7 @@ class App extends Component {
 
   finalizeSave (output) {
     const newData = this.state.data.map((i) => Object.assign({}, i))
-    newData[this.state.editUser.ID - 1] = output.data[0]
+    newData[this.state.editUser.id - 1] = output.data[0]
     this.setState({data: newData, saving: false})
   }
 
@@ -69,7 +76,7 @@ class App extends Component {
       cache: 'default'
     }
 
-    fetch(`/api/user/${this.state.editUser.ID}`, myInit)
+    fetch(`/api/user/${this.state.editUser.id}`, myInit)
       .then((output) => output.json())
       .then((output) => {
         const saveFinish = new Date()
@@ -87,6 +94,10 @@ class App extends Component {
       })
   }
 
+  //////////////
+  //  Errors  //
+  //////////////
+
   addError (message) {
     const newErrors = this.state.errorMessages.map((i) => i)
     newErrors.push(message)
@@ -97,10 +108,18 @@ class App extends Component {
     this.setState({errorMessages: []})
   }
 
-  componentWillMount () {
+  //////////////////
+  //  Pagination  //
+  //////////////////
+
+  changePage (pageNumber) {
+    this.fetchPage(pageNumber)
+  }
+
+  fetchPage (pageNumber) {
     const startTime = new Date()
     let headers = {}
-    fetch('/api/users')
+    fetch(`/api/users?page=${pageNumber}`)
       .then((output) => {
         ;['X-Cache', 'X-Cache-Hits', 'X-Served-By'].forEach((key) => {
           headers[key] = output.headers.get(key)
@@ -110,12 +129,25 @@ class App extends Component {
       .then((output) => {
         const finishTime = new Date()
         const loadTime = finishTime - startTime
-        this.setState({data: output.data, loadTime, headers})
+        const totalPages = output.meta['total-pages']
+        this.setState({
+          data: output.data,
+          editUser: null,
+          headers,
+          loadTime,
+          pageNumber,
+          totalPages,
+          userId: null
+        })
       })
       .catch(error => {
         console.log(error)
         this.addError('Could not fetch data from the server')
       })
+  }
+
+  componentWillMount () {
+    this.fetchPage(0)
   }
 
   render () {
@@ -137,8 +169,17 @@ class App extends Component {
               </Panel>
             </Jumbotron>
             <Col xs={12} md={8}>
-              <ErrorAlert errors={this.state.errorMessages} handleAlertDismiss={this.clearErrors}/>
-              <DataTable users={this.state.data} onClick={this.selectRow}/>
+              <ErrorAlert
+                errors={this.state.errorMessages}
+                handleAlertDismiss={this.clearErrors}
+              />
+              <DataTable
+                users={this.state.data}
+                onClick={this.selectRow}
+                currentPage={this.state.pageNumber}
+                changePage={this.changePage}
+                totalPages={this.state.totalPages}
+              />
             </Col>
             <Col xs={6} md={4}>
               <Panel>

@@ -30,6 +30,37 @@ const cityValidator = (str) => {
   return validator.matches(str, '[a-z|A-Z| ]+')
 }
 
+const sendJsonApiResponse = (res, records, type, pagination) => {
+  const formattedResponse = records.map(record => {
+    return {
+      type,
+      id: record.ID,
+      attributes: record
+    }
+  })
+  res.setHeader('Cache-Control', 'no-cache') // User-agent: do not cache
+  // TODO: ADD surrogate keys
+  res.setHeader('Surrogate-Key', ALL_USERS) // Fastly: Categorize content
+  res.setHeader('Surrogate-Control', 'max-age=86400') // Fastly: cache for a day
+  const output = { data: formattedResponse }
+  if (pagination) {
+    const lastPage = Math.ceil(pagination.count / PAGE_SIZE)
+    output.meta = { 'total-pages': lastPage }
+    output.links = {
+      'self': `/api/users?page=${pagination.pageNumber}`,
+      first: `/api/users?page=0`,
+      last: `/api/users?page=${lastPage}`
+    }
+    if (pagination.pageNumber > 0) {
+      output.links.prev = `/api/users?page=${pagination.pageNumber - 1}`
+    }
+    if (pagination.pageNumber < lastPage) {
+      output.links.next = `/api/users?page=${pagination.pageNumber + 1}`
+    }
+  }
+  res.send(output)
+}
+
 const purgeCache = (keys) => {
   if (!process.env.FASTLY_KEY || !process.env.SERVICE_ID) {
     console.log('not configured to clear cache.')
@@ -58,6 +89,8 @@ const purgeCache = (keys) => {
 //                             Constants                              //
 ////////////////////////////////////////////////////////////////////////
 
+const PAGE_SIZE = 20
+
 const ALL_USERS = 'all-users'
 
 const FASTLY_URL = 'https://api.fastly.com'
@@ -79,25 +112,27 @@ const DATA_MAP = {
  * Get all users
  */
 app.get('/api/users', (req, res) => {
-  connection.query('select * from Persons', (err, response) => {
+  const pageNumber = parseInt(req.query.page, 10) || 0
+  const start = pageNumber * PAGE_SIZE
+  const end = start + PAGE_SIZE
+  let count = 0
+  connection.query(`select COUNT(*) as count from Persons`, (err, results) => {
     if (err) throw err
-    res.setHeader('Surrogate-Key', ALL_USERS)
-    res.setHeader('Cheezy', 'So Cheezy')
-    res.setHeader('Cache-Control', 'no-cache') // user-agent does not cache
-    res.setHeader('Surrogate-Control', 'max-age=86400') // Tell Fastly to cache this for a day
-    res.send({ data: response })
+    count = results[0].count
+  })
+  connection.query(`select * from Persons LIMIT ${start},${end}`, (err, records) => {
+    if (err) throw err
+    sendJsonApiResponse(res, records, 'user', {pageNumber, count})
   })
 })
 
 /**
- * Get one user
+ * Get one user (USED?)
  */
 app.get('/api/user/:userId', (req, res) => {
-  connection.query(`select * from Persons where ID=${req.body.ID}`, (err, response) => {
+  connection.query(`select * from Persons where ID=${req.body.id}`, (err, records) => {
     if (err) throw err
-    res.setHeader('Cache-Control', 'no-cache') // user-agent does not cache
-    res.setHeader('Surrogate-Control', 'no-cache') // Tell Fastly NOT to cache individual user requests
-    res.send({ data: response })
+    sendJsonApiResponse(res, records, 'user')
   })
 })
 
@@ -105,29 +140,27 @@ app.get('/api/user/:userId', (req, res) => {
  * Replace the data for one user record with a new set of data
  */
 app.put('/api/user/:userId', (req, res) => {
-  const fields = Object.keys(req.body).map((key) => {
+  const fields = Object.keys(req.body.attributes).map((key) => {
     if (key === 'ID') return
     const validator = DATA_MAP[key]
     if (!validator) {
       console.log('key not valid: ', key)
-    } else if (validator(req.body[key])) {
-      return `${key} = "${req.body[key]}"`
+    } else if (validator(req.body.attributes[key])) {
+      return `${key} = "${req.body.attributes[key]}"`
     } else {
       console.log('data does not match validation-criteria: ', key)
     }
   }).filter(Boolean)
-  const query = `update Persons set ${fields.join(', ')} where ID=${req.body.ID}`
+  const query = `update Persons set ${fields.join(', ')} where ID=${req.body.id}`
 
   console.log('updating database...')
   connection.query(query, (err, response) => {
     if (err) throw err
     purgeCache([ALL_USERS])
     console.log('returning updated data...')
-    connection.query(`select * from Persons where ID=${req.body.ID}`, (err, response) => {
+    connection.query(`select * from Persons where ID=${req.body.id}`, (err, records) => {
       if (err) throw err
-      res.setHeader('Cache-Control', 'no-cache')
-      res.setHeader('Surrogate-Control', 'no-cache')
-      res.send({ data: response })
+      sendJsonApiResponse(res, records, 'user')
     })
   })
 })
