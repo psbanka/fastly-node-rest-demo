@@ -11,7 +11,7 @@ caching on your RESTful web service. In this article, we hope to take you
 through the process of actually implementing this step by step on an example
 single-page web application.
 
-![Check out this video](https://youtu.be/qB-avDWUc5g)
+[![Video introduction](https://img.youtube.com/vi/qB-avDWUc5g/0.jpg)](https://www.youtube.com/watch?v=qB-avDWUc5g)
 
 ### Background
 
