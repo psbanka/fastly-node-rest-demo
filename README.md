@@ -12,6 +12,7 @@ through the process of actually implementing this step by step on an example
 single-page web application.
 
 Click the image below to see the overview video:
+
 [![Video introduction](https://img.youtube.com/vi/qB-avDWUc5g/0.jpg)](https://www.youtube.com/watch?v=qB-avDWUc5g)
 
 ### Background
