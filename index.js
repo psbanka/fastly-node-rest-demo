@@ -30,6 +30,10 @@ const cityValidator = (str) => {
   return validator.matches(str, '[a-z|A-Z| ]+')
 }
 
+const getSurrogateKeys = (records, type) => {
+  return records.map(record => `${type}-${record.ID}`)
+}
+
 const sendJsonApiResponse = (res, records, type, pagination) => {
   const formattedResponse = records.map(record => {
     return {
@@ -39,8 +43,9 @@ const sendJsonApiResponse = (res, records, type, pagination) => {
     }
   })
   res.setHeader('Cache-Control', 'no-cache') // User-agent: do not cache
-  // TODO: ADD surrogate keys
-  res.setHeader('Surrogate-Key', ALL_USERS) // Fastly: Categorize content
+  const surrogateKeys = getSurrogateKeys(records, type)
+  console.log('surrogateKeys:', surrogateKeys)
+  res.setHeader('Surrogate-Key', surrogateKeys.join(' ')) // Fastly: Categorize content
   res.setHeader('Surrogate-Control', 'max-age=86400') // Fastly: cache for a day
   const output = { data: formattedResponse }
   if (pagination) {
@@ -61,7 +66,7 @@ const sendJsonApiResponse = (res, records, type, pagination) => {
   res.send(output)
 }
 
-const purgeCache = (keys) => {
+const purgeCache = (surrogateKeys) => {
   if (!process.env.FASTLY_KEY || !process.env.SERVICE_ID) {
     console.log('not configured to clear cache.')
     return
@@ -69,7 +74,7 @@ const purgeCache = (keys) => {
   const url = `${FASTLY_URL}/service/${process.env.SERVICE_ID}/purge`
   request
     .post(url)
-    .send({ surrogate_keys: keys })
+    .send({ surrogate_keys: surrogateKeys })
     .set('Fastly-Key', process.env.FASTLY_KEY)
     .set('Accept', 'application/json')
     .end(function (err, res) {
@@ -78,7 +83,7 @@ const purgeCache = (keys) => {
         return
       }
       if (res.statusCode === 200) {
-        console.log('cache cleared')
+        console.log(`purged ${surrogateKeys}`)
       } else {
         console.log('error clearing cache: ', res.statusCode)
       }
@@ -91,7 +96,7 @@ const purgeCache = (keys) => {
 
 const PAGE_SIZE = 20
 
-const ALL_USERS = 'all-users'
+const USER_TYPE = 'user'
 
 const FASTLY_URL = 'https://api.fastly.com'
 
@@ -122,7 +127,7 @@ app.get('/api/users', (req, res) => {
   })
   connection.query(`select * from Persons LIMIT ${start},${end}`, (err, records) => {
     if (err) throw err
-    sendJsonApiResponse(res, records, 'user', {pageNumber, count})
+    sendJsonApiResponse(res, records, USER_TYPE, {pageNumber, count})
   })
 })
 
@@ -132,7 +137,7 @@ app.get('/api/users', (req, res) => {
 app.get('/api/user/:userId', (req, res) => {
   connection.query(`select * from Persons where ID=${req.body.id}`, (err, records) => {
     if (err) throw err
-    sendJsonApiResponse(res, records, 'user')
+    sendJsonApiResponse(res, records, USER_TYPE)
   })
 })
 
@@ -156,11 +161,12 @@ app.put('/api/user/:userId', (req, res) => {
   console.log('updating database...')
   connection.query(query, (err, response) => {
     if (err) throw err
-    purgeCache([ALL_USERS])
     console.log('returning updated data...')
     connection.query(`select * from Persons where ID=${req.body.id}`, (err, records) => {
       if (err) throw err
-      sendJsonApiResponse(res, records, 'user')
+      const surrogateKeys = getSurrogateKeys(records, USER_TYPE)
+      purgeCache(surrogateKeys)
+      sendJsonApiResponse(res, records, USER_TYPE)
     })
   })
 })
@@ -198,7 +204,7 @@ function cleanup () {
   }, 30 * 1000)
 }
 
-purgeCache([ALL_USERS])
+// purgeCache(ALL_USERS)
 
 process.on('SIGINT', cleanup)
 process.on('SIGTERM', cleanup)
