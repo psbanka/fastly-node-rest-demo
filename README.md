@@ -2,12 +2,16 @@
 
 By Peter Banka | August 1 2017 | Performance
 
+## Overview
+
 There was a [great series of
 articles](https://www.fastly.com/blog/api-caching-part-iii) by [Ryan
 Richards](https://www.fastly.com/blog/ryan-richards) on how to set up API
 caching on your RESTful web service. In this article, we hope to take you
 through the process of actually implementing this step by step on an example
 single-page web application.
+
+![Check out this video](https://youtu.be/qB-avDWUc5g)
 
 ### Background
 
