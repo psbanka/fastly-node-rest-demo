@@ -3,7 +3,7 @@ import { FormGroup, FormControl, ControlLabel, Button, ButtonToolbar } from 'rea
 import ImageUploader from './ImageUploader'
 
 export default ({editUser, onChange, onSave, onCancel, saving}) => {
-  if (editUser === null) return (<h3>Click row to edit</h3>)
+  if (editUser === null) return (<h3>Click a row to edit</h3>)
   const saveText = saving ? 'Saving...' : 'Save'
 
   return (
@@ -13,7 +13,7 @@ export default ({editUser, onChange, onSave, onCancel, saving}) => {
         <FormControl
           type="text"
           disabled={saving}
-          value={editUser.FirstName}
+          value={editUser.attributes.FirstName}
           placeholder="Enter text"
           onChange={(e) => onChange('FirstName', e.target.value)}
         />
@@ -21,7 +21,7 @@ export default ({editUser, onChange, onSave, onCancel, saving}) => {
         <FormControl
           type="text"
           disabled={saving}
-          value={editUser.LastName}
+          value={editUser.attributes.LastName}
           placeholder="Enter text"
           onChange={(e) => onChange('LastName', e.target.value)}
         />
@@ -29,7 +29,7 @@ export default ({editUser, onChange, onSave, onCancel, saving}) => {
         <FormControl
           type="text"
           disabled={saving}
-          value={editUser.Email}
+          value={editUser.attributes.Email}
           placeholder="Enter text"
           onChange={(e) => onChange('Email', e.target.value)}
         />
@@ -37,7 +37,7 @@ export default ({editUser, onChange, onSave, onCancel, saving}) => {
         <FormControl
           type="text"
           disabled={saving}
-          value={editUser.Address}
+          value={editUser.attributes.Address}
           placeholder="Enter text"
           onChange={(e) => onChange('Address', e.target.value)}
         />
@@ -45,11 +45,11 @@ export default ({editUser, onChange, onSave, onCancel, saving}) => {
         <FormControl
           type="text"
           disabled={saving}
-          value={editUser.City}
+          value={editUser.attributes.City}
           placeholder="Enter text"
           onChange={(e) => onChange('City', e.target.value)}
         />
-        <ImageUploader avatar={editUser.Avatar} onChange={(data) => onChange('Avatar', data)} />
+        <ImageUploader avatar={editUser.attributes.Avatar} onChange={(data) => onChange('Avatar', data)} />
         <FormControl.Feedback />
         <ButtonToolbar>
           <Button disabled={saving} bsSize="large" bsStyle="primary" onClick={onSave}>
