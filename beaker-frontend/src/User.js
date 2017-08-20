@@ -25,7 +25,6 @@ export default class User extends Component {
   }
 
   componentWillMount () {
-    console.log('receiving props......', this.props.auth)
     if (this.props.auth.username) {
       this.axios.get(`/api/photos/${this.props.auth.username}`)
         .then(output => {
@@ -42,21 +41,19 @@ export default class User extends Component {
   }
 
   onSave () {
-    debugger
     const data = {
       email: this.props.auth.username,
       photo: this.state.newPhoto
     }
+    const self = this
+
     this.axios.post(`/api/photos/${this.props.auth.username}`, data)
       .then(output => {
-        console.log('onSave (good)', output)
-        debugger
-        // TODO: add photo to this.state.photos
-        this.setState({newPhoto: null, saving: false})
+        self.state.photos.push(output.data.data[0])
+        self.setState({newPhoto: null, saving: false, photos: self.state.photos})
       })
       .catch(error => {
         console.log('onSave (bad)', error)
-        debugger
         console.log('ERROR in User.onSave: ', error)
       })
   }
@@ -67,7 +64,13 @@ export default class User extends Component {
     return (
       <div>
         <Jumbotron style={{display: 'flex', justifyContent: 'space-between'}}>
-          <h1>Photo Manager</h1>
+          <div>
+            <h1>Photo Manager</h1>
+            <p>{this.props.currentUser.FirstName} {this.props.currentUser.LastName}</p>
+          </div>
+          <div>
+            <img alt="User Avatar" src={this.props.currentUser.Avatar} style={{width: '100px', height: '100px'}}></img> 
+          </div>
         </Jumbotron>
         <Col xs={12} md={8}>
           <form>

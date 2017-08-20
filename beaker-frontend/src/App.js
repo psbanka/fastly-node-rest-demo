@@ -35,6 +35,7 @@ class App extends Component {
     this.axios.defaults.headers.post['Content-Type'] = 'application/json'
     // axios.defaults.headers.common['Authorization'] = AUTH_TOKEN;
     this.state = {
+      currentUser: {},
       auth: {
         id: null,
         state: AUTH_STATES.UNKNOWN,
@@ -105,7 +106,7 @@ class App extends Component {
           username: output.data.user.username,
           state: AUTH_STATES.LOGGED_IN
         }
-        this.setState({auth: newAuth})
+        this.setState({auth: newAuth, currentUser: output.data.extra})
         if (['/login?', '/login', '/'].includes(window.location.pathname)) {
           window.location = '/user'
         }
@@ -150,6 +151,7 @@ class App extends Component {
               <Route path="/user" render={() => (
                 <User
                   auth={this.state.auth}
+                  currentUser={this.state.currentUser}
                 />)}
               />
             </Row>

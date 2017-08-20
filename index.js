@@ -196,21 +196,6 @@ app.post('/api/login', (req, res) => {
   })
 })
 
-/*
-app.get('/api/login', function (req, res, next) {
-  console.log('====== BING')
-  passport.authenticate('local', function (err, user, info) {
-    console.log('------ ZING')
-    if (err) { return next(err) }
-    if (!user) { return res.redirect('/login') }
-    req.logIn(user, function (err) {
-      if (err) { return next(err) }
-      return res.redirect('/users/' + user.username)
-    })
-  })(req, res, next)
-})
-*/
-
 app.get('/api/logout',
   function (req, res) {
     console.log('LOGGING OUT')
@@ -222,7 +207,11 @@ app.get('/api/logout',
 app.get('/api/profile',
   require('connect-ensure-login').ensureLoggedIn(),
   (req, res) => {
-    res.send({ user: req.user })
+    const query = `select * from Persons where ID="${req.user.id}"`
+    connection.query(query, (err, records) => {
+      if (err) throw err
+      res.send({ user: req.user, extra: records[0] })
+    })
   }
 )
 
@@ -234,7 +223,6 @@ app.get('/api/photos/:email',
   require('connect-ensure-login').ensureLoggedIn(),
   (req, res) => {
     const query = `select * from Photos where Email="${req.params.email}"`
-    console.log('QUERY', query)
     connection.query(query, (err, records) => {
       if (err) throw err
       sendJsonApiResponse(res, records, PHOTO_TYPE)
@@ -244,19 +232,20 @@ app.get('/api/photos/:email',
 app.post('/api/photos/:email',
   require('connect-ensure-login').ensureLoggedIn(),
   (req, res) => {
-    console.log('BODY', req.body)
     const image = req.body.photo
     const email = req.body.email
     const query = `
       INSERT INTO Photos (Email, Photo) VALUES
         ("${email}", "${image}")
       `
-    console.log('QUERY', query)
-    connection.query(query, (err, records) => {
+    connection.query(query, (err, response) => {
       if (err) throw err
-      console.log('save success:', records)
-      // sendJsonApiResponse(res, records, PHOTO_TYPE)
-      res.send({ok: true})
+      console.log('save success:', response)
+      const id = response.insertId
+      connection.query(`SELECT * from Photos where ID=${id}`, (err, records) => {
+        if (err) throw err
+        sendJsonApiResponse(res, records, PHOTO_TYPE)
+      })
     })
   })
 
