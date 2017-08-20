@@ -13,9 +13,10 @@ import {
 import axios from 'axios'
 import Admin from './Admin'
 import Login from './Login'
+import Logout from './Logout'
 import User from './User'
 import './App.css'
-/* globals Headers */
+/* eslint-enable no-unused-vars */
 
 const AUTH_STATES = {
   UNKNOWN: 0,
@@ -23,28 +24,6 @@ const AUTH_STATES = {
   LOGGED_OUT: -1,
   LOGGED_IN: 2,
   BAD_PASSWORD: 3
-}
-
-const Home = () => (
-  <div>
-    <h2>Home</h2>
-  </div>
-)
-
-const Logout = () => {
-  const instance = axios.create()
-  instance.defaults.headers.common['Content-Type'] = 'application/json'
-  instance.defaults.headers.get['Content-Type'] = 'application/json'
-  instance.defaults.headers.post['Content-Type'] = 'application/json'
-  instance.get('/api/logout')
-    .then(() => {
-      console.log('LOGGED OUT')
-    })
-  return (
-    <div>
-      <h2>Logout</h2>
-    </div>
-  )
 }
 
 class App extends Component {
@@ -95,7 +74,7 @@ class App extends Component {
           username: output.data.username
         }
         this.setState({auth: newAuth})
-        window.location = '/'
+        window.location = '/user'
       })
       .catch(error => {
         console.log('error', error)
@@ -127,6 +106,9 @@ class App extends Component {
           state: AUTH_STATES.LOGGED_IN
         }
         this.setState({auth: newAuth})
+        if (['/login?', '/login', '/'].includes(window.location.pathname)) {
+          window.location = '/user'
+        }
       })
       .catch(error => {
         this.setState({auth: {state: AUTH_STATES.LOGGED_OUT}})
@@ -150,15 +132,8 @@ class App extends Component {
     return (
       <Router>
         <div>
-          <ul>
-            <li><Link to="/login">Login</Link></li>
-            <li><Link to="/logout">Logout</Link></li>
-            <li><Link to="/admin">Admin</Link></li>
-            <li><Link to="/user">User</Link></li>
-          </ul>
           <Grid>
             <Row>
-              <Route path="/" component={Home}/>
               <Route path="/logout" component={Logout}/>
               <Route path="/admin" render={() => (
                 <Admin
