@@ -2,201 +2,175 @@
 import React, { Component } from 'react'
 import {
   Alert, Col, Jumbotron, Grid, FormGroup, FormControl,
-  ControlLabel, HelpBlock, Panel, Row, Table } from 'react-bootstrap'
-import DataTable from './DataTable'
-import UserDetails from './UserDetails'
-import ErrorAlert from './ErrorAlert'
-
+  ControlLabel, HelpBlock, Panel, Row
+} from 'react-bootstrap'
+import {
+  BrowserRouter as Router,
+  Route,
+  Link,
+  withRouter
+} from 'react-router-dom'
+import axios from 'axios'
+import Admin from './Admin'
+import Login from './Login'
 import './App.css'
-const MINIMUM_SAVE_TIME = 500
+/* globals Headers */
 
-/* globals fetch Headers */
+const AUTH_STATES = {
+  UNKNOWN: 0,
+  CHECKING: 1,
+  LOGGED_OUT: -1,
+  LOGGED_IN: 2,
+  BAD_PASSWORD: 3
+}
+
+const Home = () => (
+  <div>
+    <h2>Home</h2>
+  </div>
+)
+
+const Logout = () => {
+  const instance = axios.create()
+  instance.defaults.headers.common['Content-Type'] = 'application/json'
+  instance.defaults.headers.get['Content-Type'] = 'application/json'
+  instance.defaults.headers.post['Content-Type'] = 'application/json'
+  instance.get('/api/logout')
+    .then(() => {
+      console.log('LOGGED OUT')
+    })
+  return (
+    <div>
+      <h2>Logout</h2>
+    </div>
+  )
+}
 
 class App extends Component {
   constructor () {
     super(...arguments)
+    this.axios = axios.create()
+    this.axios.defaults.headers.common['Content-Type'] = 'application/json'
+    this.axios.defaults.headers.get['Content-Type'] = 'application/json'
+    this.axios.defaults.headers.post['Content-Type'] = 'application/json'
+    // axios.defaults.headers.common['Authorization'] = AUTH_TOKEN;
     this.state = {
-      pageNumber: 0,
-      data: [],
-      editUser: null,
-      errorMessages: [],
-      headers: {},
-      loadTime: 0,
-      saving: false,
-      totalPages: 0,
-      userId: null
+      auth: {
+        id: null,
+        state: AUTH_STATES.UNKNOWN,
+        username: '',
+        password: ''
+      }
     }
-    this.selectRow = this.selectRow.bind(this)
-    this.changeEditUser = this.changeEditUser.bind(this)
-    this.saveEditUser = this.saveEditUser.bind(this)
-    this.cancelEditUser = this.cancelEditUser.bind(this)
-    this.clearErrors = this.clearErrors.bind(this)
-    this.changePage = this.changePage.bind(this)
+    this.onUserChange = this.onUserChange.bind(this)
+    this.onUserLogin = this.onUserLogin.bind(this)
+    this.onUserLogout = this.onUserLogout.bind(this)
   }
 
-  selectRow (userId) {
-    const editUser = Object.assign({}, this.state.data[userId])
-    this.setState({userId, editUser})
+  onUserLogout () {
+    const history = this.props.history
+    this.axios.get('/api/logout')
+      .then(() => {
+        history.push('/login')
+      })
+      .catch((error) => {
+        console.log('error on logout:', error)
+      })
   }
 
-  /////////////////////
-  //  Editing users  //
-  /////////////////////
-
-  changeEditUser (field, newValue) {
-    const newEditUser = Object.assign({}, this.state.editUser)
-    newEditUser.attributes[field] = newValue
-    this.setState({editUser: newEditUser})
-  }
-
-  cancelEditUser () {
-    this.setState({userId: null, editUser: null})
-  }
-
-  finalizeSave (output) {
-    const newData = this.state.data.map((i) => Object.assign({}, i))
-    newData[this.state.editUser.id - 1] = output.data[0]
-    this.setState({data: newData, saving: false})
-  }
-
-  saveEditUser () {
-    const newData = this.state.data.map((i) => Object.assign({}, i))
-    newData[this.state.userId] = this.state.editUser
-    this.setState({data: newData, saving: true})
-    const saveStart = new Date()
-
-    const myHeaders = new Headers()
-    myHeaders.append('Content-Type', 'application/json')
-
-    const myInit = {
-      method: 'PUT',
-      body: JSON.stringify(this.state.editUser),
-      headers: myHeaders,
-      mode: 'cors',
-      cache: 'default'
+  onUserLogin () {
+    const newAuth = {
+      state: AUTH_STATES.CHECKING,
+      username: this.state.username,
+      password: this.state.password
     }
+    this.setState({auth: newAuth})
 
-    fetch(`/api/user/${this.state.editUser.id}`, myInit)
-      .then((output) => output.json())
-      .then((output) => {
-        const saveFinish = new Date()
-        const extraWait = MINIMUM_SAVE_TIME - (saveFinish - saveStart)
-        if (extraWait <= 0) {
-          this.finalizeSave(output)
+    this.axios.post('/api/login', this.state.auth)
+      .then(output => {
+        console.log('success', output)
+        const newAuth = {
+          state: AUTH_STATES.LOGGED_IN,
+          id: output.data.id,
+          username: output.data.username
+        }
+        this.setState({auth: newAuth})
+        this.props.history.push('/')
+      })
+      .catch(error => {
+        console.log('error', error)
+        if (error.response.status === 401) {
+          const newAuth = {
+            state: AUTH_STATES.BAD_PASSWORD,
+            username: this.state.username,
+            password: ''
+          }
+          this.setState({auth: newAuth})
         } else {
-          setTimeout(() => this.finalizeSave(output), extraWait)
+          console.warn('UNKNOWN ERROR', error)
         }
       })
-      .catch(error => {
-        console.log(error)
-        this.addError('Unable to save user to database')
-        this.setState({saving: false})
+  }
+
+  onUserChange (field, value) {
+    const authCopy = Object.assign({}, this.state.auth)
+    authCopy[field] = value
+    this.setState({auth: authCopy})
+  }
+
+  checkAuth () {
+    this.axios.get('/api/profile')
+      .then(output => {
+        this.setState({auth: {state: AUTH_STATES.LOGGED_IN}})
       })
-  }
-
-  //////////////
-  //  Errors  //
-  //////////////
-
-  addError (message) {
-    const newErrors = this.state.errorMessages.map((i) => i)
-    newErrors.push(message)
-    this.setState({errorMessages: newErrors})
-  }
-
-  clearErrors () {
-    this.setState({errorMessages: []})
-  }
-
-  //////////////////
-  //  Pagination  //
-  //////////////////
-
-  changePage (pageNumber) {
-    this.fetchPage(pageNumber)
-  }
-
-  fetchPage (pageNumber) {
-    const startTime = new Date()
-    let headers = {}
-    fetch(`/api/users?page=${pageNumber}`)
-      .then((output) => {
-        ;['X-Cache', 'X-Cache-Hits', 'X-Served-By'].forEach((key) => {
-          headers[key] = output.headers.get(key)
-        })
-        return output.json()
-      })
-      .then((output) => {
-        const finishTime = new Date()
-        const loadTime = finishTime - startTime
-        const totalPages = output.meta['total-pages']
-        this.setState({
-          data: output.data,
-          editUser: null,
-          headers,
-          loadTime,
-          pageNumber,
-          totalPages,
-          userId: null
-        })
-      })
-      .catch(error => {
-        console.log(error)
-        this.addError('Could not fetch data from the server')
+      .catch(output => {
+        this.props.history.push('/login')
+        this.setState({auth: {state: AUTH_STATES.LOGGED_OUT}})
+        console.log('ERROR: ', output)
       })
   }
 
   componentWillMount () {
-    this.fetchPage(0)
+    this.checkAuth()
   }
 
   render () {
+    if (this.state.auth.state === AUTH_STATES.UNKNOWN) {
+      return (
+        <h1>Checking auth...</h1>
+      )
+    }
     return (
-      <div>
-        <Grid>
-          <Row>
-            <Jumbotron style={{display: 'flex', justifyContent: 'space-between'}}>
-              <h1>User Manager</h1>
-              <Panel>
-                <div style={{width: '420px'}}>
-                  <Table>
-                    <tr><td><b>Time to load data</b></td><td>{this.state.loadTime}ms</td></tr>
-                    <tr><td><b>X-Cache</b></td><td>{this.state.headers['X-Cache']}</td></tr>
-                    <tr><td><b>X-Cache-Hits</b></td><td>{this.state.headers['X-Cache-Hits']}</td></tr>
-                    <tr><td><b>X-Served-By</b></td><td>{this.state.headers['X-Served-By']}</td></tr>
-                  </Table>
-                </div>
-              </Panel>
-            </Jumbotron>
-            <Col xs={12} md={8}>
-              <ErrorAlert
-                errors={this.state.errorMessages}
-                handleAlertDismiss={this.clearErrors}
-              />
-              <DataTable
-                users={this.state.data}
-                onClick={this.selectRow}
-                currentPage={this.state.pageNumber}
-                changePage={this.changePage}
-                totalPages={this.state.totalPages}
-              />
-            </Col>
-            <Col xs={6} md={4}>
-              <Panel>
-                <UserDetails
-                  editUser={this.state.editUser}
-                  onChange={this.changeEditUser}
-                  onSave={this.saveEditUser}
-                  onCancel={this.cancelEditUser}
-                  saving={this.state.saving}
+      <Router>
+        <div>
+          <ul>
+            <li><Link to="/login">Login</Link></li>
+            <li><Link to="/logout">Logout</Link></li>
+            <li><Link to="/admin">Admin</Link></li>
+          </ul>
+          <Grid>
+            <Row>
+              <Route path="/" component={Home}/>
+              <Route path="/logout" component={Logout}/>
+              <Route path="/admin" render={() => (
+                <Admin
+                  onUserLogout={this.onUserLogout}
                 />
-              </Panel>
-            </Col>
-          </Row>
-        </Grid>
-      </div>
+              )}/>
+              <Route path="/login" render={() => (
+                <Login
+                  auth={this.state.auth}
+                  onSubmit={this.onUserLogin}
+                  onUserChange={this.onUserChange}
+                />)}
+              />
+            </Row>
+          </Grid>
+        </div>
+      </Router>
     )
   }
 }
 
-export default App
+// export default App
+export default withRouter(App)

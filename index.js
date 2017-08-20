@@ -4,6 +4,49 @@ const express = require('express')
 const app = express()
 const mysql = require('mysql')
 const validator = require('validator')
+const passport = require('passport')
+const LocalStrategy = require('passport-local').Strategy
+
+
+////////////////////////////////////////////////////////////////////////
+//                    Trivial authentication code                     //
+////////////////////////////////////////////////////////////////////////
+
+passport.use(new LocalStrategy(
+  function(username, password, done) {
+    console.log('USING strategy')
+    return done(null, {username: 'admin', id: 1})
+    /*
+    User.findOne({ username: username }, function (err, user) {
+      if (err) { return done(err); }
+      if (!user) {
+        return done(null, false, { message: 'Incorrect username.' });
+      }
+      if (!user.validPassword(password)) {
+        return done(null, false, { message: 'Incorrect password.' });
+      }
+      return done(null, user);
+    });
+    */
+  }
+))
+
+passport.serializeUser(function (user, cb) {
+  cb(null, user.id)
+})
+
+passport.deserializeUser(function (id, cb) {
+  cb(null, {id: 1, username: 'admin'})
+})
+
+////////////////////////////////////////////////////////////////////////
+//                        App initialization                          //
+////////////////////////////////////////////////////////////////////////
+
+app.use(require('cookie-parser')())
+app.use(require('express-session')({ secret: process.env.SESSION_SECRET, resave: true, saveUninitialized: true }))
+app.use(passport.initialize())
+app.use(passport.session())
 
 app.use(require('body-parser').json({limit: '10mb'}))
 app.use(express.static('public'))
@@ -47,6 +90,7 @@ const sendJsonApiResponse = (res, records, type, pagination) => {
   console.log('surrogateKeys:', surrogateKeys)
   res.setHeader('Surrogate-Key', surrogateKeys.join(' ')) // Fastly: Categorize content
   res.setHeader('Surrogate-Control', 'max-age=86400') // Fastly: cache for a day
+  res.setHeader('Content-type', 'application/json')
   const output = { data: formattedResponse }
   if (pagination) {
     const lastPage = Math.ceil(pagination.count / PAGE_SIZE)
@@ -113,23 +157,85 @@ const DATA_MAP = {
 //                           Express routes                           //
 ////////////////////////////////////////////////////////////////////////
 
+//////////////////////
+//  Authentication  //
+//////////////////////
+
+/*
+app.post('/login',
+  passport.authenticate('local'),
+  function (req, res) {
+    console.log('success!')
+    res.redirect('/')
+  }
+)
+*/
+
+app.post('/api/login', (req, res) => {
+  console.log('username', req.body.username)
+  console.log('password', req.body.password)
+  if (req.body.username === 'admin' && req.body.password === 'abc123') {
+    req.login({id: 1, username: 'admin'}, (output) => {
+      console.log('auth output', output)
+      return res.send({id: 1, username: 'admin'})
+    })
+  } else {
+    res.sendStatus(401)
+  }
+})
+
+app.get('/api/login', function (req, res, next) {
+  console.log('====== BING')
+  passport.authenticate('local', function (err, user, info) {
+    console.log('------ ZING')
+    if (err) { return next(err) }
+    if (!user) { return res.redirect('/login') }
+    req.logIn(user, function (err) {
+      if (err) { return next(err) }
+      return res.redirect('/users/' + user.username)
+    })
+  })(req, res, next)
+})
+
+app.get('/api/logout',
+  function (req, res) {
+    console.log('LOGGING OUT')
+    req.logout()
+    res.redirect('/')
+  }
+)
+
+app.get('/api/profile',
+  require('connect-ensure-login').ensureLoggedIn(),
+  (req, res) => {
+    res.send({ user: req.user })
+  }
+)
+
+////////////////////
+//  Manage users  //
+////////////////////
+
 /**
  * Get all users
  */
-app.get('/api/users', (req, res) => {
-  const pageNumber = parseInt(req.query.page, 10) || 0
-  const start = pageNumber * PAGE_SIZE
-  const end = start + PAGE_SIZE
-  let count = 0
-  connection.query(`select COUNT(*) as count from Persons`, (err, results) => {
-    if (err) throw err
-    count = results[0].count
-  })
-  connection.query(`select * from Persons LIMIT ${start},${end}`, (err, records) => {
-    if (err) throw err
-    sendJsonApiResponse(res, records, USER_TYPE, {pageNumber, count})
-  })
-})
+app.get('/api/users',
+  require('connect-ensure-login').ensureLoggedIn(),
+  (req, res) => {
+    const pageNumber = parseInt(req.query.page, 10) || 0
+    const start = pageNumber * PAGE_SIZE
+    const end = start + PAGE_SIZE
+    let count = 0
+    connection.query(`select COUNT(*) as count from Persons`, (err, results) => {
+      if (err) throw err
+      count = results[0].count
+    })
+    connection.query(`select * from Persons LIMIT ${start},${end}`, (err, records) => {
+      if (err) throw err
+      sendJsonApiResponse(res, records, USER_TYPE, {pageNumber, count})
+    })
+  }
+)
 
 /**
  * Get one user (USED?)

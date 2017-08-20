@@ -21,12 +21,17 @@
   "dependencies": {
     "avatar-generator": "^1.0.8",
     "body-parser": "^1.17.2",
+    "connect-ensure-login": "^0.1.1",
+    "cookie-parser": "^1.4.3",
     "dotenv": "^4.0.0",
     "eslint": "^4.3.0",
     "express": "^4.15.3",
+    "express-session": "^1.15.5",
     "faker": "^4.1.0",
     "forever": "^0.15.3",
     "mysql": "^2.14.0",
+    "passport": "^0.4.0",
+    "passport-local": "^1.0.0",
     "superagent": "^3.5.2",
     "validator": "^8.0.0"
   },

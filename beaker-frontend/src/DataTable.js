@@ -1,5 +1,7 @@
+/* eslint-disable no-unused-vars */
 import React from 'react'
 import { Table, Pagination } from 'react-bootstrap'
+/* eslint-enable no-unused-vars */
 
 /**
  * Pages are zero-indexed on server and 1-indexed on UI
@@ -9,8 +11,8 @@ export default ({users, onClick, currentPage, totalPages, changePage}) => {
 
   const output = users.map((user, i) => {
     return (
-      <tr onClick={() => onClick(i)}>
-        <td key={user.id}>{user.attributes.FirstName}</td>
+      <tr key={user.id} onClick={() => onClick(i)}>
+        <td>{user.attributes.FirstName}</td>
         <td>{user.attributes.LastName}</td>
         <td>{user.attributes.Email}</td>
         <td>{user.attributes.Address}</td>
