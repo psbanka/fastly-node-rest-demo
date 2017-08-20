@@ -62,7 +62,7 @@ export default ({editUser, onChange, onSave, onCancel, saving}) => {
         <ImageUploader avatar={editUser.attributes.Avatar} onChange={(data) => onChange('Avatar', data)} />
         <FormControl.Feedback />
         <ButtonToolbar>
-          <Button type="submit" disabled={saving} bsSize="large" bsStyle="primary" onClick={onSave}>
+          <Button disabled={saving} bsSize="large" bsStyle="primary" onClick={onSave}>
             {saveText}
           </Button>
           <Button disabled={saving} bsSize="large" onClick={onCancel}>Cancel</Button>

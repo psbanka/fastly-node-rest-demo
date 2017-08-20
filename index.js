@@ -15,7 +15,7 @@ const md5 = require('blueimp-md5')
 passport.use(new LocalStrategy(
   function (username, password, done) {
     console.log('USING strategy')
-    return done(null, {username: 'admin', id: 1})
+    return done(null, {username: 'admin', id: 2})
     /*
     User.findOne({ username: username }, function (err, user) {
       if (err) { return done(err); }
@@ -31,12 +31,22 @@ passport.use(new LocalStrategy(
   }
 ))
 
-passport.serializeUser(function (user, cb) {
-  cb(null, user.id)
+passport.serializeUser(function (user, done) {
+  done(null, user.id)
 })
 
-passport.deserializeUser(function (id, cb) {
-  cb(null, {id: 1, username: 'admin'})
+passport.deserializeUser(function (id, done) {
+  const query = `select * from Persons where ID="${id}"`
+  connection.query(query, (err, records) => {
+    if (err) {
+      done(err)
+    }
+    if (records.length !== 1) {
+      done('Could not find user')
+    } else {
+      done(null, {id, username: records[0].Email})
+    }
+  })
 })
 
 ////////////////////////////////////////////////////////////////////////
@@ -137,6 +147,25 @@ const purgeCache = (surrogateKeys) => {
         console.log('error clearing cache: ', res.statusCode)
       }
     })
+}
+
+const validate = (attributes) => {
+  return Object.keys(attributes).map((key) => {
+    if (attributes[key] == null) {
+      return null
+    }
+    if (key === 'ID') return
+    const validator = DATA_MAP[key].validator
+    const processor = DATA_MAP[key].processor
+    if (!validator) {
+      console.log('key not valid: ', key)
+    } else if (validator(attributes[key])) {
+      const value = processor(attributes[key])
+      return [key, value]
+    } else {
+      console.log('data does not match validation-criteria: ', key)
+    }
+  }).filter(Boolean)
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -275,6 +304,28 @@ app.get('/api/users',
 )
 
 /**
+ * Create a new user (sign up)
+ */
+app.post('/api/users', (req, res) => {
+  console.log('req.body', req.body.attributes)
+  const rawFields = validate(req.body.attributes)
+  const keys = rawFields.map(([key, value]) => key).join(',')
+  const values = rawFields.map(([key, value]) => `"${value}"`).join(',')
+  // TODO: check the email is not alrady in there
+  const query = `INSERT into Persons (${keys}) VALUES (${values})`
+  console.log(query)
+  connection.query(query, (err, response) => {
+    if (err) throw err
+    console.log('save success:', response)
+    const id = response.insertId
+    connection.query(`SELECT * from Persons where ID=${id}`, (err, records) => {
+      if (err) throw err
+      sendJsonApiResponse(res, records, USER_TYPE)
+    })
+  })
+})
+
+/**
  * Get one user (USED?)
  */
 app.get('/api/user/:userId', (req, res) => {
@@ -287,34 +338,26 @@ app.get('/api/user/:userId', (req, res) => {
 /**
  * Replace the data for one user record with a new set of data
  */
-app.put('/api/user/:userId', (req, res) => {
-  const fields = Object.keys(req.body.attributes).map((key) => {
-    if (key === 'ID') return
-    const validator = DATA_MAP[key].validator
-    const processor = DATA_MAP[key].processor
-    if (!validator) {
-      console.log('key not valid: ', key)
-    } else if (validator(req.body.attributes[key])) {
-      const value = processor(req.body.attributes[key])
-      return `${key} = "${value}"`
-    } else {
-      console.log('data does not match validation-criteria: ', key)
-    }
-  }).filter(Boolean)
-  const query = `update Persons set ${fields.join(', ')} where ID=${req.body.id}`
+app.put('/api/user/:userId',
+  require('connect-ensure-login').ensureLoggedIn(),
+  (req, res) => {
+    const rawFields = validate(req.body.attributes)
+    const fields = rawFields.map(([key, value]) => `${key} = "${value}"`)
+    const query = `update Persons set ${fields.join(', ')} where ID=${req.body.id}`
 
-  console.log('updating database...')
-  connection.query(query, (err, response) => {
-    if (err) throw err
-    console.log('returning updated data...')
-    connection.query(`select * from Persons where ID=${req.body.id}`, (err, records) => {
+    console.log('updating database...')
+    connection.query(query, (err, response) => {
       if (err) throw err
-      const surrogateKeys = getSurrogateKeys(records, USER_TYPE)
-      purgeCache(surrogateKeys)
-      sendJsonApiResponse(res, records, USER_TYPE)
+      console.log('returning updated data...')
+      connection.query(`select * from Persons where ID=${req.body.id}`, (err, records) => {
+        if (err) throw err
+        const surrogateKeys = getSurrogateKeys(records, USER_TYPE)
+        purgeCache(surrogateKeys)
+        sendJsonApiResponse(res, records, USER_TYPE)
+      })
     })
-  })
-})
+  }
+)
 
 ////////////////////////////////////////////////////////////////////////
 //                           Server startup                           //

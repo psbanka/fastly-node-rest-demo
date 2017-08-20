@@ -16,6 +16,7 @@ export default class User extends Component {
     this.axios.defaults.headers.get['Content-Type'] = 'application/json'
     this.axios.defaults.headers.post['Content-Type'] = 'application/json'
     this.state = {
+      loading: true,
       newPhoto: null,
       photos: [],
       saving: false
@@ -28,7 +29,7 @@ export default class User extends Component {
     if (this.props.auth.username) {
       this.axios.get(`/api/photos/${this.props.auth.username}`)
         .then(output => {
-          this.setState({photos: output.data.data})
+          this.setState({photos: output.data.data, loading: false})
         })
         .catch(error => {
           console.log('ERROR: ', error)
@@ -69,7 +70,7 @@ export default class User extends Component {
             <p>{this.props.currentUser.FirstName} {this.props.currentUser.LastName}</p>
           </div>
           <div>
-            <img alt="User Avatar" src={this.props.currentUser.Avatar} style={{width: '100px', height: '100px'}}></img> 
+            <img alt="User Avatar" src={this.props.currentUser.Avatar} style={{width: '100px', height: '100px'}}></img>
           </div>
         </Jumbotron>
         <Col xs={12} md={8}>
@@ -84,7 +85,7 @@ export default class User extends Component {
               </ButtonToolbar>
             </FormGroup>
           </form>
-          <PhotoTable photos={this.state.photos} />
+          <PhotoTable photos={this.state.photos} loading={this.state.loading} />
         </Col>
       </div>
     )

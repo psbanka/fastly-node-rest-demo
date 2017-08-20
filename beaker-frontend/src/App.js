@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import React, { Component } from 'react'
 import {
-  Alert, Col, Jumbotron, Grid, FormGroup, FormControl,
+  Alert, Col, Grid, FormGroup, FormControl,
   ControlLabel, HelpBlock, Panel, Row
 } from 'react-bootstrap'
 import {
@@ -11,9 +11,12 @@ import {
   withRouter
 } from 'react-router-dom'
 import axios from 'axios'
+
 import Admin from './Admin'
 import Login from './Login'
+import Home from './Home'
 import Logout from './Logout'
+import Signup from './Signup'
 import User from './User'
 import './App.css'
 /* eslint-enable no-unused-vars */
@@ -58,11 +61,11 @@ class App extends Component {
       })
   }
 
-  onUserLogin () {
+  onUserLogin (username, password) {
     const newAuth = {
       state: AUTH_STATES.CHECKING,
-      username: this.state.auth.username,
-      password: this.state.auth.password
+      username: username || this.state.auth.username,
+      password: password || this.state.auth.password
     }
     this.setState({auth: newAuth})
 
@@ -111,12 +114,9 @@ class App extends Component {
           window.location = '/user'
         }
       })
-      .catch(error => {
+      .catch(() => {
         this.setState({auth: {state: AUTH_STATES.LOGGED_OUT}})
-        console.log('ERROR: ', error)
-        if (window.location.pathname !== '/login') {
-          window.location = '/login'
-        }
+        console.log('User is not logged in')
       })
   }
 
@@ -135,10 +135,10 @@ class App extends Component {
         <div>
           <Grid>
             <Row>
-              <Route path="/logout" component={Logout}/>
-              <Route path="/admin" render={() => (
-                <Admin
-                  onUserLogout={this.onUserLogout}
+              <Route exact path="/" component={Home}/>
+              <Route path="/signup" render={() => (
+                <Signup
+                  onUserLogin={this.onUserLogin}
                 />
               )}/>
               <Route path="/login" render={() => (
@@ -154,6 +154,12 @@ class App extends Component {
                   currentUser={this.state.currentUser}
                 />)}
               />
+              <Route path="/admin" render={() => (
+                <Admin
+                  onUserLogout={this.onUserLogout}
+                />
+              )}/>
+              <Route path="/logout" component={Logout}/>
             </Row>
           </Grid>
         </div>
