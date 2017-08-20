@@ -6,14 +6,14 @@ const mysql = require('mysql')
 const validator = require('validator')
 const passport = require('passport')
 const LocalStrategy = require('passport-local').Strategy
-
+const md5 = require('blueimp-md5')
 
 ////////////////////////////////////////////////////////////////////////
 //                    Trivial authentication code                     //
 ////////////////////////////////////////////////////////////////////////
 
 passport.use(new LocalStrategy(
-  function(username, password, done) {
+  function (username, password, done) {
     console.log('USING strategy')
     return done(null, {username: 'admin', id: 1})
     /*
@@ -63,6 +63,11 @@ app.use(function (req, res, next) {
 
 const addrValidator = (str) => {
   return validator.matches(str, '^[0-9]+ .+$')
+}
+
+const passwordValidator = (str) => {
+  return validator.matches(str, '.*')
+  // return validator.matches(str, '^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d!$%@#£€*?&]')
 }
 
 const avatarValidator = (str) => {
@@ -144,13 +149,16 @@ const USER_TYPE = 'user'
 
 const FASTLY_URL = 'https://api.fastly.com'
 
+const noop = (x) => x
+
 const DATA_MAP = {
-  'Email': validator.isEmail,
-  'LastName': validator.isAlpha,
-  'FirstName': validator.isAlpha,
-  'Address': addrValidator,
-  'City': cityValidator,
-  'Avatar': avatarValidator
+  'Email': {validator: validator.isEmail, processor: noop},
+  'LastName': {validator: validator.isAlpha, processor: noop},
+  'FirstName': {validator: validator.isAlpha, processor: noop},
+  'Address': {validator: addrValidator, processor: noop},
+  'City': {validator: cityValidator, processor: noop},
+  'Avatar': {validator: avatarValidator, processor: noop},
+  'Password': {validator: passwordValidator, processor: md5}
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -172,16 +180,29 @@ app.post('/login',
 */
 
 app.post('/api/login', (req, res) => {
-  console.log('username', req.body.username)
-  console.log('password', req.body.password)
-  if (req.body.username === 'admin' && req.body.password === 'abc123') {
-    req.login({id: 1, username: 'admin'}, (output) => {
-      console.log('auth output', output)
-      return res.send({id: 1, username: 'admin'})
-    })
-  } else {
-    res.sendStatus(401)
-  }
+  const query = `select * from Persons where email="${req.body.username}"`
+  connection.query(query, (err, records) => {
+    if (err) {
+      console.log('ERROR', err)
+      res.sendStatus(401)
+    } else if (records.length > 1) {
+      console.log('too many matching users')
+      res.sendStatus(401)
+    } else if (records[0].Password !== md5(req.body.password)) {
+      console.log('bad password', records[0].Password, md5(req.body.password))
+      res.sendStatus(401)
+    } else {
+      const record = records[0]
+      const serializedUser = {
+        id: record.ID,
+        username: record.Email
+      }
+      req.login(serializedUser, (output) => {
+        console.log('auth output', output)
+        return res.send(serializedUser)
+      })
+    }
+  })
 })
 
 app.get('/api/login', function (req, res, next) {
@@ -253,11 +274,13 @@ app.get('/api/user/:userId', (req, res) => {
 app.put('/api/user/:userId', (req, res) => {
   const fields = Object.keys(req.body.attributes).map((key) => {
     if (key === 'ID') return
-    const validator = DATA_MAP[key]
+    const validator = DATA_MAP[key].validator
+    const processor = DATA_MAP[key].processor
     if (!validator) {
       console.log('key not valid: ', key)
     } else if (validator(req.body.attributes[key])) {
-      return `${key} = "${req.body.attributes[key]}"`
+      const value = processor(req.body.attributes[key])
+      return `${key} = "${value}"`
     } else {
       console.log('data does not match validation-criteria: ', key)
     }

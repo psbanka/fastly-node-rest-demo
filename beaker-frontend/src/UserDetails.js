@@ -1,6 +1,8 @@
+/* eslint-disable no-unused-vars */
 import React from 'react'
 import { FormGroup, FormControl, ControlLabel, Button, ButtonToolbar } from 'react-bootstrap'
 import ImageUploader from './ImageUploader'
+/* eslint-enable no-unused-vars */
 
 export default ({editUser, onChange, onSave, onCancel, saving}) => {
   if (editUser === null) return (<h3>Click a row to edit</h3>)
@@ -49,10 +51,18 @@ export default ({editUser, onChange, onSave, onCancel, saving}) => {
           placeholder="Enter text"
           onChange={(e) => onChange('City', e.target.value)}
         />
+        <ControlLabel>Password</ControlLabel>
+        <FormControl
+          type="password"
+          disabled={saving}
+          value={editUser.attributes.Password}
+          placeholder="Enter password"
+          onChange={(e) => onChange('Password', e.target.value)}
+        />
         <ImageUploader avatar={editUser.attributes.Avatar} onChange={(data) => onChange('Avatar', data)} />
         <FormControl.Feedback />
         <ButtonToolbar>
-          <Button disabled={saving} bsSize="large" bsStyle="primary" onClick={onSave}>
+          <Button type="submit" disabled={saving} bsSize="large" bsStyle="primary" onClick={onSave}>
             {saveText}
           </Button>
           <Button disabled={saving} bsSize="large" onClick={onCancel}>Cancel</Button>

@@ -5,7 +5,6 @@ import UserDetails from './UserDetails'
 import ErrorAlert from './ErrorAlert'
 import { Col, Jumbotron, Table, Panel } from 'react-bootstrap'
 import axios from 'axios'
-
 /* eslint-enable no-unused-vars */
 
 const MINIMUM_SAVE_TIME = 500
@@ -75,7 +74,7 @@ export default class Admin extends Component {
         if (extraWait <= 0) {
           this.finalizeSave(output.data)
         } else {
-          setTimeout(() => this.finalizeSave(output), extraWait)
+          setTimeout(() => this.finalizeSave(output.data), extraWait)
         }
       })
       .catch(error => {

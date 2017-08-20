@@ -2,13 +2,15 @@ require('dotenv').config()
 const faker = require('faker')
 const avatar = require('avatar-generator')()
 const mysql = require('mysql')
+const md5 = require('blueimp-md5')
 
 const DATA_MAP = [
   {field: 'Email', size: 255, generator: faker.internet.email},
   {field: 'LastName', size: 255, generator: faker.name.lastName},
   {field: 'FirstName', size: 255, generator: faker.name.firstName},
   {field: 'Address', size: 255, generator: faker.address.streetAddress},
-  {field: 'City', size: 255, generator: faker.address.city}
+  {field: 'City', size: 255, generator: faker.address.city},
+  {field: 'Password', size: 255, generator: () => md5(faker.address.city())}
 ]
 
 const createTable = (connection) => {
@@ -33,15 +35,17 @@ const createTable = (connection) => {
   })
 }
 
-const createRecord = (connection) => {
+const createRecord = (connection, record) => {
   return new Promise((resolve, reject) => {
-    const email = faker.internet.email()
+    const email = record.email || faker.internet.email()
     const gender = Math.random() < 0.5 ? 'male' : 'female'
-    avatar(email, gender, 400).toBuffer(function (err, buffer){
+    avatar(email, gender, 400).toBuffer(function (err, buffer) {
       if (err) reject(err)
       const imageSlug = 'data:image/png;base64,' + buffer.toString('base64')
       const lname = faker.name.lastName()
-      const mainValues = DATA_MAP.map(({generator}) => `"${generator()}"`).join(', ')
+      const mainValues = DATA_MAP.map(({generator, field}) => {
+        return `"${record[field] || generator()}"`
+      }).join(', ')
       const fieldNames = DATA_MAP.map(({field}) => field).join(', ')
       const query = `
       INSERT INTO Persons (${fieldNames}, Avatar) VALUES
@@ -73,7 +77,10 @@ console.log(`Creating ${recordCount} records...`)
 
 createTable(connection)
   .then(() => {
-    Promise.all(Array(recordCount).fill().map(() => createRecord(connection)))
+    return createRecord(connection, {Email: 'admin', Password: md5('abc123')})
+  })
+  .then(() => {
+    Promise.all(Array(recordCount).fill().map(() => createRecord(connection, {})))
       .then(() => {
         connection.end()
         console.log('done')

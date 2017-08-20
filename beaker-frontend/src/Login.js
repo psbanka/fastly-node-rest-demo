@@ -40,7 +40,7 @@ export default ({auth, onUserChange, onSubmit}) => {
             </FormGroup>
           </Panel>
           <ButtonToolbar>
-            <Button disabled={saving} bsSize="large" bsStyle="primary" onClick={onSubmit}>
+            <Button type="submit" disabled={saving} bsSize="large" bsStyle="primary" onClick={onSubmit}>
               {submitText}
             </Button>
           </ButtonToolbar>
