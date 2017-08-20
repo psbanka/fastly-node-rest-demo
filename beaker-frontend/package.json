@@ -5,6 +5,7 @@
   "dependencies": {
     "axios": "^0.16.2",
     "eslint": "^4.3.0",
+    "history": "^4.6.3",
     "react": "^15.6.1",
     "react-bootstrap": "^0.31.1",
     "react-dom": "^15.6.1",

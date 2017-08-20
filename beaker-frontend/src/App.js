@@ -68,10 +68,9 @@ class App extends Component {
   }
 
   onUserLogout () {
-    const history = this.props.history
     this.axios.get('/api/logout')
       .then(() => {
-        history.push('/login')
+        window.location = '/login'
       })
       .catch((error) => {
         console.log('error on logout:', error)
@@ -81,8 +80,8 @@ class App extends Component {
   onUserLogin () {
     const newAuth = {
       state: AUTH_STATES.CHECKING,
-      username: this.state.username,
-      password: this.state.password
+      username: this.state.auth.username,
+      password: this.state.auth.password
     }
     this.setState({auth: newAuth})
 
@@ -95,14 +94,14 @@ class App extends Component {
           username: output.data.username
         }
         this.setState({auth: newAuth})
-        this.props.history.push('/')
+        window.location = '/'
       })
       .catch(error => {
         console.log('error', error)
         if (error.response.status === 401) {
           const newAuth = {
             state: AUTH_STATES.BAD_PASSWORD,
-            username: this.state.username,
+            username: this.state.auth.username,
             password: ''
           }
           this.setState({auth: newAuth})
@@ -123,10 +122,12 @@ class App extends Component {
       .then(output => {
         this.setState({auth: {state: AUTH_STATES.LOGGED_IN}})
       })
-      .catch(output => {
-        this.props.history.push('/login')
+      .catch(error => {
         this.setState({auth: {state: AUTH_STATES.LOGGED_OUT}})
-        console.log('ERROR: ', output)
+        console.log('ERROR: ', error)
+        if (window.location.pathname !== '/login') {
+          window.location = '/login'
+        }
       })
   }
 
