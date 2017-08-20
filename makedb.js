@@ -14,12 +14,11 @@ const DATA_MAP = [
 ]
 
 const createTable = (connection) => {
-  let query = 'DROP TABLE Persons'
   const fields = DATA_MAP.map(({field, size}) => `${field} varchar(${size})`).join(', ')
 
   return new Promise((resolve, reject) => {
-    connection.query(query, () => {
-      query = `
+    connection.query('DROP TABLE Persons', () => {
+      let query = `
         CREATE TABLE Persons (
           ID int NOT NULL AUTO_INCREMENT,
           ${fields},
@@ -33,6 +32,24 @@ const createTable = (connection) => {
       })
     })
   })
+    .then(() => {
+      return new Promise((resolve, reject) => {
+        connection.query('DROP TABLE Photos', () => {
+          let query = `
+            CREATE TABLE Photos (
+              ID int NOT NULL AUTO_INCREMENT,
+              Email varchar(255),
+              Photo TEXT(10000000),
+              PRIMARY KEY (ID)
+            );
+          `
+          connection.query(query, (err, results) => {
+            if (err) reject(err)
+            resolve()
+          })
+        })
+      })
+    })
 }
 
 const createRecord = (connection, record) => {

@@ -13,6 +13,7 @@ import {
 import axios from 'axios'
 import Admin from './Admin'
 import Login from './Login'
+import User from './User'
 import './App.css'
 /* globals Headers */
 
@@ -120,7 +121,12 @@ class App extends Component {
   checkAuth () {
     this.axios.get('/api/profile')
       .then(output => {
-        this.setState({auth: {state: AUTH_STATES.LOGGED_IN}})
+        const newAuth = {
+          id: output.data.user.id,
+          username: output.data.user.username,
+          state: AUTH_STATES.LOGGED_IN
+        }
+        this.setState({auth: newAuth})
       })
       .catch(error => {
         this.setState({auth: {state: AUTH_STATES.LOGGED_OUT}})
@@ -148,6 +154,7 @@ class App extends Component {
             <li><Link to="/login">Login</Link></li>
             <li><Link to="/logout">Logout</Link></li>
             <li><Link to="/admin">Admin</Link></li>
+            <li><Link to="/user">User</Link></li>
           </ul>
           <Grid>
             <Row>
@@ -163,6 +170,11 @@ class App extends Component {
                   auth={this.state.auth}
                   onSubmit={this.onUserLogin}
                   onUserChange={this.onUserChange}
+                />)}
+              />
+              <Route path="/user" render={() => (
+                <User
+                  auth={this.state.auth}
                 />)}
               />
             </Row>

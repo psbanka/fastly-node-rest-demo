@@ -48,7 +48,7 @@ app.use(require('express-session')({ secret: process.env.SESSION_SECRET, resave:
 app.use(passport.initialize())
 app.use(passport.session())
 
-app.use(require('body-parser').json({limit: '10mb'}))
+app.use(require('body-parser').json({limit: '90mb'}))
 app.use(express.static('public'))
 
 // Default all content-type to JSON
@@ -146,6 +146,7 @@ const purgeCache = (surrogateKeys) => {
 const PAGE_SIZE = 20
 
 const USER_TYPE = 'user'
+const PHOTO_TYPE = 'photo'
 
 const FASTLY_URL = 'https://api.fastly.com'
 
@@ -168,16 +169,6 @@ const DATA_MAP = {
 //////////////////////
 //  Authentication  //
 //////////////////////
-
-/*
-app.post('/login',
-  passport.authenticate('local'),
-  function (req, res) {
-    console.log('success!')
-    res.redirect('/')
-  }
-)
-*/
 
 app.post('/api/login', (req, res) => {
   const query = `select * from Persons where email="${req.body.username}"`
@@ -205,6 +196,7 @@ app.post('/api/login', (req, res) => {
   })
 })
 
+/*
 app.get('/api/login', function (req, res, next) {
   console.log('====== BING')
   passport.authenticate('local', function (err, user, info) {
@@ -217,6 +209,7 @@ app.get('/api/login', function (req, res, next) {
     })
   })(req, res, next)
 })
+*/
 
 app.get('/api/logout',
   function (req, res) {
@@ -232,6 +225,40 @@ app.get('/api/profile',
     res.send({ user: req.user })
   }
 )
+
+//////////////
+//  Photos  //
+//////////////
+
+app.get('/api/photos/:email',
+  require('connect-ensure-login').ensureLoggedIn(),
+  (req, res) => {
+    const query = `select * from Photos where Email="${req.params.email}"`
+    console.log('QUERY', query)
+    connection.query(query, (err, records) => {
+      if (err) throw err
+      sendJsonApiResponse(res, records, PHOTO_TYPE)
+    })
+  })
+
+app.post('/api/photos/:email',
+  require('connect-ensure-login').ensureLoggedIn(),
+  (req, res) => {
+    console.log('BODY', req.body)
+    const image = req.body.photo
+    const email = req.body.email
+    const query = `
+      INSERT INTO Photos (Email, Photo) VALUES
+        ("${email}", "${image}")
+      `
+    console.log('QUERY', query)
+    connection.query(query, (err, records) => {
+      if (err) throw err
+      console.log('save success:', records)
+      // sendJsonApiResponse(res, records, PHOTO_TYPE)
+      res.send({ok: true})
+    })
+  })
 
 ////////////////////
 //  Manage users  //
