@@ -9,7 +9,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "cd beaker-frontend;yarn run build;cd -;mkdir -p public;cp -a beaker-frontend/build/* public",
+    "build": "service mysql stop;cd beaker-frontend;yarn run build;cd -;mkdir -p public;cp -a beaker-frontend/build/* public;service mysql start",
     "restart": "yarn stop; yarn start",
     "start": "yarn run build;forever start index.js",
     "stop": "forever stopall",

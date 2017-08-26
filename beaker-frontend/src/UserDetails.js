@@ -29,7 +29,7 @@ export default ({editUser, onChange, onSave, onCancel, saving}) => {
         />
         <ControlLabel>Email</ControlLabel>
         <FormControl
-          type="text"
+          type="email"
           disabled={saving}
           value={editUser.attributes.Email}
           placeholder="Enter text"
