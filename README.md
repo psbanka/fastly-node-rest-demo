@@ -142,7 +142,7 @@ substance to download from our API. You'll need to run the `makedb.js` script
 first to initialize the database as follows:
 
 ```
-node makedb.sh 100
+node makedb.js 100
 ```
 you should see some output like the following:
 
