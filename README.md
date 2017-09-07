@@ -118,9 +118,9 @@ DB_NAME='beaker'
 4. Install Node on your system. I recommend using a version manager such as
 [nvm](https://github.com/creationix/nvm). This tutorial has been tested on the latest version of Node LTS, which at the time of this writing was `6.11.1`.
 
-5. Install the `yarn` package dependency installation system using `npm install -g yarn`
+5. Install the latest version of `npm` package dependency installation system using `npm install -g npm@5`
 
-6. Install the server dependencies by running `yarn run setup`.
+6. Install the server dependencies by running `npm run setup`.
 
 
 ## Setting up the basic server without a proxy
@@ -204,9 +204,9 @@ app) in the `beaker-frontend` directory and the backend is served by node using
 the express platform by running the `index.js` file. To get the basic system
 installed and running on your system, run the following:
 
-`yarn run setup`
+`npm run setup`
 
-`yarn start`
+`npm start`
 
 ### Test it with your browser
 
@@ -263,4 +263,4 @@ FASTLY_KEY="10778ea9b00182dde388a1c2f8269f08"
 SERVICE_ID="4IExUZplpxpu2olu1ag982"
 ```
 
-Now, when you restart your server process (using `yarn stop` and `yarn start`), you will see that your server-side process now performs proper cache purging so that when you change a value on the page and then refresh the page, you can see that the data on the page does refresh (with a corresponding `X-CACHE: MISS`). However subsequent refreshes will register `X-CACHE: HIT`.
+Now, when you restart your server process (using `npm stop` and `npm start`), you will see that your server-side process now performs proper cache purging so that when you change a value on the page and then refresh the page, you can see that the data on the page does refresh (with a corresponding `X-CACHE: MISS`). However subsequent refreshes will register `X-CACHE: HIT`.
