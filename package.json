@@ -9,11 +9,11 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "cd beaker-frontend;yarn run build;cd -;mkdir -p public;cp -a beaker-frontend/build/* public",
-    "restart": "yarn stop; yarn start",
-    "start": "yarn run build;forever start index.js",
+    "build": "cd beaker-frontend;npm run build;cd -;mkdir -p public;cp -a beaker-frontend/build/* public",
+    "restart": "npm stop; npm start",
+    "start": "npm run build;forever start index.js",
     "stop": "forever stopall",
-    "setup": "yarn;cd beaker-frontend;yarn;cd -"
+    "setup": "npm install;cd beaker-frontend;npm install;cd -"
   },
   "keywords": [],
   "author": "peba@fastly.com",
